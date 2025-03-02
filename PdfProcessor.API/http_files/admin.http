@@ -1,0 +1,30 @@
+### Create admin user (for initial setup)
+# @name createAdmin
+POST {{baseUrl}}/api/auth/create-admin
+Content-Type: application/json
+
+{
+    "email": "{{adminEmail}}",
+    "password": "{{adminPassword}}",
+    "confirmPassword": "{{adminPassword}}",
+    "firstName": "Admin",
+    "lastName": "User",
+    "secretKey": "{{adminSecretKey}}"
+}
+
+### Login as admin
+# @name adminLogin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "{{adminEmail}}",
+    "password": "{{adminPassword}}"
+}
+
+### Store token from response
+@adminToken = {{adminLogin.response.body.token}}
+
+### Access protected admin endpoint
+GET {{baseUrl}}/api/users
+Authorization: Bearer {{adminToken}}

@@ -1,0 +1,33 @@
+### Register new user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+    "email": "{{userEmail}}",
+    "password": "{{userPassword}}",
+    "confirmPassword": "{{userPassword}}",
+    "firstName": "John",
+    "lastName": "Doe"
+}
+
+### Login with user account
+# @name userLogin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "{{userEmail}}",
+    "password": "{{userPassword}}"
+}
+
+### Store token from response 
+@token = {{userLogin.response.body.token}}
+
+### Login with invalid credentials (should fail)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "invalid@example.com",
+    "password": "WrongPassword123!"
+}

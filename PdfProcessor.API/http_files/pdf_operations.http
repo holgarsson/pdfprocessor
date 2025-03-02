@@ -1,0 +1,42 @@
+@authToken = {{login.response.body.token}}
+@baseUrl = http://localhost:5000
+
+### Upload single PDF file
+POST {{baseUrl}}/api/pdf/process
+Authorization: Bearer {{authToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="files"; filename="example1.pdf"
+Content-Type: application/pdf
+
+< ./files/example1.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Upload multiple PDF files
+POST {{baseUrl}}/api/pdf/process
+Authorization: Bearer {{authToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="files"; filename="example1.pdf"
+Content-Type: application/pdf
+
+< ./files/example1.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="files"; filename="example2.pdf"
+Content-Type: application/pdf
+
+< ./files/example2.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Try to upload without authentication (should fail)
+POST {{baseUrl}}/api/pdf/process
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="files"; filename="example1.pdf"
+Content-Type: application/pdf
+
+< ./files/example1.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW--

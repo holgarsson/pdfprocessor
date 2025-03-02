@@ -1,0 +1,23 @@
+### Register new user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+    "email": "user@example.com",
+    "password": "Password123!",
+    "confirmPassword": "Password123!",
+    "firstName": "John",
+    "lastName": "Doe"
+}
+
+### Register another user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+    "email": "admin@example.com",
+    "password": "Admin123!",
+    "confirmPassword": "Admin123!",
+    "firstName": "Admin",
+    "lastName": "User"
+}

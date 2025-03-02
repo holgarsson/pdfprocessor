@@ -1,9 +1,39 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "PdfProcessor.UI", "PdfProcessor.UI\", "{52DB1089-59AD-920F-FD87-217231D09149}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.VirtualPath = "/localhost_55673"
+		Debug.AspNetCompiler.PhysicalPath = "PdfProcessor.UI\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_55673\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_55673"
+		Release.AspNetCompiler.PhysicalPath = "PdfProcessor.UI\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_55673\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "55673"
+		SlnRelativePath = "PdfProcessor.UI\"
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdfProcessor.API", "PdfProcessor.API\PdfProcessor.API.csproj", "{8F7B1F1D-1234-4567-8901-234567890ABC}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{52DB1089-59AD-920F-FD87-217231D09149}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52DB1089-59AD-920F-FD87-217231D09149}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F7B1F1D-1234-4567-8901-234567890ABC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F7B1F1D-1234-4567-8901-234567890ABC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
