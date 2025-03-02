@@ -1,14 +1,14 @@
 ### Get all users (admin only)
 GET https://localhost:5001/api/users
-Authorization: Bearer {{authToken}}
+Authorization: Bearer {{adminToken}}
 
 ### Get user by ID (admin only)
 GET https://localhost:5001/api/users/{{userId}}
-Authorization: Bearer {{authToken}}
+Authorization: Bearer {{adminToken}}
 
 ### Update user (admin only)
 PUT https://localhost:5001/api/users/{{userId}}
-Authorization: Bearer {{authToken}}
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {
@@ -21,15 +21,15 @@ Content-Type: application/json
 
 ### Delete user (admin only)
 DELETE https://localhost:5001/api/users/{{userId}}
-Authorization: Bearer {{authToken}}
+Authorization: Bearer {{adminToken}}
 
 ### Get all roles (admin only)
 GET https://localhost:5001/api/users/roles
-Authorization: Bearer {{authToken}}
+Authorization: Bearer {{adminToken}}
 
 ### Change password (any authenticated user)
 POST https://localhost:5001/api/auth/change-password
-Authorization: Bearer {{authToken}}
+Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {

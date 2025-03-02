@@ -25,6 +25,22 @@ Content-Type: application/json
 ### Store token from response
 @adminToken = {{adminLogin.response.body.token}}
 
+### Upload single PDF file
+POST {{baseUrl}}/api/pdf/process
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=--boundary--
+
+----boundary--
+Content-Disposition: form-data; name="files"; filename="challenge_1.pdf"
+Content-Type: application/pdf
+
+< ./files/challenge_1.pdf
+----boundary----
+
+### List all processed files 
+GET {{baseUrl}}/api/pdf/processed
+Authorization: Bearer {{adminToken}}
+
 ### Access protected admin endpoint
 GET {{baseUrl}}/api/users
 Authorization: Bearer {{adminToken}}

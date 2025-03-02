@@ -3,18 +3,12 @@ using PdfProcessor.API.Models;
 
 namespace PdfProcessor.API.Services;
 
-public class UserService
+public class UserService(
+    UserManager<ApplicationUser> userManager,
+    RoleManager<IdentityRole> roleManager)
 {
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly RoleManager<IdentityRole> _roleManager;
-
-    public UserService(
-        UserManager<ApplicationUser> userManager,
-        RoleManager<IdentityRole> roleManager)
-    {
-        _userManager = userManager;
-        _roleManager = roleManager;
-    }
+    private readonly UserManager<ApplicationUser> _userManager = userManager;
+    private readonly RoleManager<IdentityRole> _roleManager = roleManager;
 
     public async Task<IEnumerable<UserResponse>> GetAllUsers()
     {
@@ -135,8 +129,6 @@ public class UserService
         return await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
     }
 
-    public async Task<IEnumerable<string>> GetAllRoles()
-    {
-        return _roleManager.Roles.Select(r => r.Name ?? string.Empty);
-    }
+    public IEnumerable<string> GetAllRoles() => _roleManager.Roles.Select(r => r.Name ?? string.Empty);
+    
 }

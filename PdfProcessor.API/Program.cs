@@ -7,14 +7,31 @@ using System.Text;
 using PdfProcessor.API.Data;
 using PdfProcessor.API.Models;
 using PdfProcessor.API.Services;
+using Microsoft.OpenApi.Models;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddOpenApi(options => 
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Info.Title = "Roknskapar PDF API";
+        document.Info.Description = "Roknskapar PDF viðgerð til JSON";
+        document.Info.Version = "v1";
+        document.Info.Contact = new OpenApiContact
+        {
+            Name = "Kodi ÍVF",
+            Email = "Kodi@Kodi.fo"
+        };
+        return Task.CompletedTask;
+    });
+});
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddSingleton<IPdfProcessingService, PdfProcessingService>();
 
 // Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -97,9 +114,10 @@ using (var scope = app.Services.CreateScope())
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();           
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 }
+
 
 app.UseHttpsRedirection();
 app.UseCors("AllowPdfProcessorUI");
@@ -131,7 +149,9 @@ app.MapPost("/api/auth/register", async (
     return Results.BadRequest(new { errors = result.Errors });
 })
 .WithName("Register")
-.WithOpenApi();
+.WithSummary("Register a new user")
+.WithDescription("Creates a new user account with the provided information and assigns the User role")
+.WithTags("Authentication");
 
 // Login endpoint
 app.MapPost("/api/auth/login", async (
@@ -170,10 +190,13 @@ app.MapPost("/api/auth/login", async (
     });
 })
 .WithName("Login")
-.WithOpenApi();
+.WithSummary("Authenticate a user")
+.WithDescription("Authenticates a user with the provided credentials and returns a JWT token")
+.WithTags("Authentication");
 
 // User Management Endpoints
-var userApi = app.MapGroup("/api/users").RequireAuthorization("RequireAdminRole");
+var userApi = app.MapGroup("/api/users")
+.RequireAuthorization("RequireAdminRole");
 
 // Get all users
 userApi.MapGet("/", async (UserService userService) =>
@@ -182,7 +205,9 @@ userApi.MapGet("/", async (UserService userService) =>
         return Results.Ok(users);
     })
     .WithName("GetAllUsers")
-    .WithOpenApi();
+    .WithSummary("Get all users")
+    .WithDescription("Retrieves a list of all users in the system")
+    .WithTags("User Management");
 
 // Get user by id
 userApi.MapGet("/{id}", async (string id, UserService userService) =>
@@ -192,7 +217,9 @@ userApi.MapGet("/{id}", async (string id, UserService userService) =>
         return Results.Ok(user);
     })
     .WithName("GetUserById")
-    .WithOpenApi();
+    .WithSummary("Get user by ID")
+    .WithDescription("Retrieves a specific user by their ID")
+    .WithTags("User Management");
 
 // Update user
 userApi.MapPut("/{id}", async (string id, UpdateUserRequest request, UserService userService) =>
@@ -204,7 +231,9 @@ userApi.MapPut("/{id}", async (string id, UpdateUserRequest request, UserService
         return Results.Ok(new { message = "User updated successfully" });
     })
     .WithName("UpdateUser")
-    .WithOpenApi();
+    .WithSummary("Update user")
+    .WithDescription("Updates a user's information")
+    .WithTags("User Management");
 
 // Delete user
 userApi.MapDelete("/{id}", async (string id, UserService userService) =>
@@ -216,16 +245,20 @@ userApi.MapDelete("/{id}", async (string id, UserService userService) =>
         return Results.Ok(new { message = "User deleted successfully" });
     })
     .WithName("DeleteUser")
-    .WithOpenApi();
+    .WithSummary("Delete user")
+    .WithDescription("Deletes a user from the system")
+    .WithTags("User Management");
 
 // Get all roles
 userApi.MapGet("/roles", async (UserService userService) =>
     {
-        var roles = await userService.GetAllRoles();
+        var roles = userService.GetAllRoles();
         return Results.Ok(roles);
     })
     .WithName("GetAllRoles")
-    .WithOpenApi();
+    .WithSummary("Get all roles")
+    .WithDescription("Retrieves a list of all roles in the system")
+    .WithTags("User Management");
 
 // Change password (available to all authenticated users)
 app.MapPost("/api/auth/change-password", async (
@@ -248,41 +281,47 @@ app.MapPost("/api/auth/change-password", async (
 })
 .RequireAuthorization()
 .WithName("ChangePassword")
-.WithOpenApi();
+.WithSummary("Change password")
+.WithDescription("Allows an authenticated user to change their password")
+.WithTags("Authentication");
 
 // PDF processing endpoint
-app.MapPost("/api/pdf/process", async (IFormFileCollection files, ILogger<Program> logger) =>
+app.MapPost("/api/pdf/process", async (
+    IFormFileCollection files,
+    IPdfProcessingService pdfProcessingService) =>
 {
     try
     {
         if (files == null || files.Count == 0)
             return Results.BadRequest("No files were uploaded.");
 
-        var processingTasks = new List<Task>();
-        foreach (var file in files)
-        {
-            if (!file.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase))
-            {
-                logger.LogWarning("Invalid file type received: {ContentType}", file.ContentType);
-                continue;
-            }
-
-            processingTasks.Add(ProcessPdfFileAsync(file, logger));
-        }
-
-        await Task.WhenAll(processingTasks);
-        
+        await pdfProcessingService.ProcessPdfFilesAsync(files);
         return Results.Ok(new { message = $"Successfully processed {files.Count} PDF files" });
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Error processing PDF files");
+        Console.WriteLine(ex.Message);
         return Results.StatusCode(500);
     }
 })
-.RequireAuthorization("RequireUserRole")
+.RequireAuthorization("RequireAdminRole")
 .WithName("ProcessPdfs")
-.WithOpenApi();
+.WithSummary("Process PDFs")
+.WithDescription("Processes a collection of PDF files")
+.WithTags("PDF Processing")
+.DisableAntiforgery();
+
+// List all processed files
+app.MapGet("/api/pdf/processed", async (IPdfProcessingService pdfProcessingService) =>
+{
+    var files = pdfProcessingService.GetAllProcessedFiles();
+    return Results.Ok(files);
+})
+.RequireAuthorization("RequireAdminRole")
+.WithName("GetAllProcessedFiles")
+.WithSummary("Get all processed files")
+.WithDescription("Retrieves a list of all processed files")
+.WithTags("PDF Processing");
 
 // Create admin endpoint (only available in development)
 app.MapPost("/api/auth/create-admin", async (
@@ -334,37 +373,5 @@ app.MapPost("/api/auth/create-admin", async (
 })
 .WithName("CreateAdmin")
 .WithOpenApi();
-
-async Task ProcessPdfFileAsync(IFormFile file, ILogger logger)
-{
-    // Create a unique filename
-    var fileName = $"{Guid.NewGuid()}.pdf";
-    var tempPath = Path.Combine(Path.GetTempPath(), fileName);
-
-    try
-    {
-        // Save the file to temp storage
-        await using (var stream = new FileStream(tempPath, FileMode.Create))
-        {
-            await file.CopyToAsync(stream);
-        }
-
-        // TODO: Implement actual PDF processing logic here
-        // This is where you would add your PDF processing implementation
-        Console.WriteLine("Processing file: {FileName}", file.FileName);
-        await Task.Delay(1000); // Simulate processing time
-        
-        // Clean up
-        if (File.Exists(tempPath))
-        {
-            File.Delete(tempPath);
-        }
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Error processing file: {FileName}", file.FileName);
-        throw;
-    }
-}
 
 app.Run();
