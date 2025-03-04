@@ -1,21 +1,75 @@
-
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { ProcessingFile } from '../types/document';
+import { ProcessingFile, ProcessedDocument } from '../types/document';
+import { toast } from 'sonner';
 
 interface ProcessingIndicatorProps {
   files: ProcessingFile[];
+  onUploadComplete?: (document: ProcessedDocument) => void;
 }
 
-const ProcessingIndicator: React.FC<ProcessingIndicatorProps> = ({ files }) => {
-  if (!files.length) return null;
+const ProcessingIndicator: React.FC<ProcessingIndicatorProps> = ({ files, onUploadComplete }) => {
+  const [processingFiles, setProcessingFiles] = useState<ProcessingFile[]>([]);
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+
+    // Initialize files with 0 progress
+    setProcessingFiles(files.map(file => ({
+      ...file,
+      status: 'processing',
+      progress: 0
+    })));
+
+    // Store intervals for cleanup
+    const intervals: NodeJS.Timeout[] = [];
+
+    // Simulate progress for each file
+    files.forEach((file) => {
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 2; // Normal speed progress
+        
+        // Simulate processing complete at random point between 40-80%
+        if (progress >= 40 + Math.random() * 40) {
+          clearInterval(interval);
+          
+          // Quick completion animation
+          progress = 100;
+          
+          // Update progress to 100% and remove after a short delay
+          setProcessingFiles(prev => prev.map(f => 
+            f.id === file.id ? { ...f, progress: 100 } : f
+          ));
+          
+          setTimeout(() => {
+            setProcessingFiles(prev => prev.filter(f => f.id !== file.id));
+          }, 300);
+        } else {
+          setProcessingFiles(prev => prev.map(f => 
+            f.id === file.id ? { ...f, progress } : f
+          ));
+        }
+      }, 50);
+      
+      intervals.push(interval);
+    });
+
+    return () => {
+      intervals.forEach(interval => clearInterval(interval));
+    };
+  }, [files, onUploadComplete]);
+
+  if (!processingFiles.length) return null;
   
   const totalFiles = files.length;
-  const completedFiles = files.filter(f => f.status === 'completed').length;
-  const errorFiles = files.filter(f => f.status === 'error').length;
-  const currentProcessing = files.find(f => f.status === 'processing');
+  const completedFiles = files.length - processingFiles.length;
+  const errorFiles = processingFiles.filter(f => f.status === 'error').length;
+  const currentProcessing = processingFiles.find(f => f.status === 'processing');
   
   const overallProgress = 
     (completedFiles / totalFiles) * 100 + 
@@ -52,7 +106,7 @@ const ProcessingIndicator: React.FC<ProcessingIndicatorProps> = ({ files }) => {
           <Progress value={overallProgress} className="h-2" />
           
           <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-            {files.map((file) => (
+            {processingFiles.map((file) => (
               <div 
                 key={file.id} 
                 className="flex items-center gap-2 text-sm p-2 rounded bg-muted/50"

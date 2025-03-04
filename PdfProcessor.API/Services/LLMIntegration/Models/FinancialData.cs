@@ -111,6 +111,7 @@ public class FinancialData
         jsonString = jsonString[startIndex..endIndex];
 
         JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
+        Console.WriteLine(jsonDocument.RootElement.EnumerateObject().Select(p => $"{p.Name}: {p.Value.ValueKind}").Aggregate((a, b) => $"{a}, {b}"));
         FinancialData data = new();
 
         foreach (JsonProperty property in jsonDocument.RootElement.EnumerateObject())
@@ -129,13 +130,20 @@ public class FinancialData
                 {
                     string? value = property.Value.GetString();
 
+                    if (property.Name == "companyName")
+                    {
+                        propertyInfo.SetValue(data, value);
+                        continue;
+                    }
+
                     if (property.Name == nameof(CompanyId))
                     {
                         // Remove all non-numeric characters
                         string? companyNumberString = new(value?.Where(char.IsDigit).ToArray());
-                        if (!string.IsNullOrWhiteSpace(companyNumberString) && int.TryParse(companyNumberString.Trim(), out int companyNumber))
+                        if (!string.IsNullOrEmpty(companyNumberString) && int.TryParse(companyNumberString.Trim(), out int companyNumber))
                         {
                             propertyInfo.SetValue(data, companyNumber);
+                            continue;
                         }
                     }
 

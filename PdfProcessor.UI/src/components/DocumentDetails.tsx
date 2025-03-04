@@ -1,21 +1,68 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProcessedDocument } from '../types/document';
-import { formatCurrency } from '../utils/mockData';
 import { Separator } from '@/components/ui/separator';
-import { FileText, BarChart2, TrendingUp, Calculator } from 'lucide-react';
+import { FileText, BarChart2, TrendingUp, Calculator, Loader2 } from 'lucide-react';
+import { api } from '../services/api';
 
 interface DocumentDetailsProps {
-  document: ProcessedDocument;
+  document: ProcessedDocument | null;
 }
 
 const DocumentDetails: React.FC<DocumentDetailsProps> = ({ document }) => {
-  const { data, fileName, uploadDate, processedDate } = document;
-  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [details, setDetails] = useState<ProcessedDocument | null>(null);
+
+  useEffect(() => {
+    const fetchDetails = async () => {
+      if (!document) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await api.getDocument(document.id);
+        setDetails(data);
+      } catch (err) {
+        console.error('Error fetching document details:', err);
+        setError('Failed to load document details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDetails();
+  }, [document]);
+
+  if (!document) {
+    return (
+      <div className="flex items-center justify-center h-64 text-muted-foreground">
+        Select a document to view details
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-500">
+        {error}
+      </div>
+    );
+  }
+
+  const doc = details || document;
+
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
+    return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -42,7 +89,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ document }) => {
         {label}
       </span>
       <span className={isNegative ? 'text-destructive' : ''}>
-        {formatCurrency(value)}
+        {api.formatCurrency(value)}
       </span>
     </div>
   );
@@ -52,12 +99,12 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ document }) => {
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
           <FileText size={18} />
-          <span className="truncate">{fileName}</span>
+          <span className="truncate">{doc.fileName}</span>
         </CardTitle>
         <CardDescription>
-          Uploaded: {formatDate(uploadDate)}
+          Uploaded: {formatDate(new Date(doc.uploadDate))}
           <br />
-          Processed: {formatDate(processedDate)}
+          Processed: {formatDate(new Date(doc.processedDate))}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden pb-0">
@@ -78,40 +125,40 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ document }) => {
           </TabsList>
           
           <TabsContent value="income" className="flex-1 overflow-y-auto pr-1 space-y-1 mt-0">
-            <FinancialRow label="Gross Profit" value={data.GrossProfit} />
-            <FinancialRow label="Staff Costs" value={data.StaffCosts} isNegative={data.StaffCosts < 0} indentLevel={1} />
-            <FinancialRow label="Other Operating Expenses" value={data.OtherOperatingExpenses} isNegative={data.OtherOperatingExpenses < 0} indentLevel={1} />
-            <FinancialRow label="Depreciation" value={data.Depreciation} isNegative={data.Depreciation < 0} indentLevel={1} />
+            <FinancialRow label="Gross Profit" value={doc.data.GrossProfit} />
+            <FinancialRow label="Staff Costs" value={doc.data.StaffCosts} isNegative={doc.data.StaffCosts < 0} indentLevel={1} />
+            <FinancialRow label="Other Operating Expenses" value={doc.data.OtherOperatingExpenses} isNegative={doc.data.OtherOperatingExpenses < 0} indentLevel={1} />
+            <FinancialRow label="Depreciation" value={doc.data.Depreciation} isNegative={doc.data.Depreciation < 0} indentLevel={1} />
             <Separator className="my-2" />
-            <FinancialRow label="Profit Before Interest" value={data.ProfitBeforeInterest} isTotal />
-            <FinancialRow label="Financial Income" value={data.FinancialIncome} indentLevel={1} />
-            <FinancialRow label="Financial Expenses" value={data.FinancialExpenses} isNegative={data.FinancialExpenses < 0} indentLevel={1} />
+            <FinancialRow label="Profit Before Interest" value={doc.data.ProfitBeforeInterest} isTotal />
+            <FinancialRow label="Financial Income" value={doc.data.FinancialIncome} indentLevel={1} />
+            <FinancialRow label="Financial Expenses" value={doc.data.FinancialExpenses} isNegative={doc.data.FinancialExpenses < 0} indentLevel={1} />
             <Separator className="my-2" />
-            <FinancialRow label="Profit Before Extraordinary Items" value={data.ProfitBeforeExtraordinaryItems} isTotal />
-            <FinancialRow label="Extraordinary Items" value={data.ExtraordinaryItems} isNegative={data.ExtraordinaryItems < 0} indentLevel={1} />
+            <FinancialRow label="Profit Before Extraordinary Items" value={doc.data.ProfitBeforeExtraordinaryItems} isTotal />
+            <FinancialRow label="Extraordinary Items" value={doc.data.ExtraordinaryItems} isNegative={doc.data.ExtraordinaryItems < 0} indentLevel={1} />
             <Separator className="my-2" />
-            <FinancialRow label="Profit Before Tax" value={data.ProfitBeforeTax} isTotal />
-            <FinancialRow label="Tax" value={data.Tax} isNegative={data.Tax < 0} indentLevel={1} />
+            <FinancialRow label="Profit Before Tax" value={doc.data.ProfitBeforeTax} isTotal />
+            <FinancialRow label="Tax" value={doc.data.Tax} isNegative={doc.data.Tax < 0} indentLevel={1} />
             <Separator className="my-2" />
-            <FinancialRow label="Profit After Tax" value={data.ProfitAfterTax} isTotal />
-            <FinancialRow label="Annual Result" value={data.AnnualResult} isTotal />
+            <FinancialRow label="Profit After Tax" value={doc.data.ProfitAfterTax} isTotal />
+            <FinancialRow label="Annual Result" value={doc.data.AnnualResult} isTotal />
           </TabsContent>
           
           <TabsContent value="balance" className="flex-1 overflow-y-auto pr-1 space-y-1 mt-0">
             <div className="font-semibold mb-2">Assets</div>
-            <FinancialRow label="Fixed Assets" value={data.FixedAssets} indentLevel={1} />
-            <FinancialRow label="Current Assets" value={data.CurrentAssets} indentLevel={1} />
+            <FinancialRow label="Fixed Assets" value={doc.data.FixedAssets} indentLevel={1} />
+            <FinancialRow label="Current Assets" value={doc.data.CurrentAssets} indentLevel={1} />
             <Separator className="my-2" />
-            <FinancialRow label="Total Assets" value={data.TotalAssets} isTotal />
+            <FinancialRow label="Total Assets" value={doc.data.TotalAssets} isTotal />
             
             <div className="font-semibold mb-2 mt-6">Equity and Liabilities</div>
-            <FinancialRow label="Equity" value={data.Equity} indentLevel={1} />
-            <FinancialRow label="Provisions" value={data.Provisions} indentLevel={1} />
-            <FinancialRow label="Long Term Liabilities" value={data.LongTermLiabilities} indentLevel={1} />
-            <FinancialRow label="Short Term Liabilities" value={data.ShortTermLiabilities} indentLevel={1} />
+            <FinancialRow label="Equity" value={doc.data.Equity} indentLevel={1} />
+            <FinancialRow label="Provisions" value={doc.data.Provisions} indentLevel={1} />
+            <FinancialRow label="Long Term Liabilities" value={doc.data.LongTermLiabilities} indentLevel={1} />
+            <FinancialRow label="Short Term Liabilities" value={doc.data.ShortTermLiabilities} indentLevel={1} />
             <Separator className="my-2" />
-            <FinancialRow label="Total Liabilities" value={data.TotalLiabilities} isTotal />
-            <FinancialRow label="Equity and Liabilities" value={data.EquityAndLiabilities} isTotal />
+            <FinancialRow label="Total Liabilities" value={doc.data.TotalLiabilities} isTotal />
+            <FinancialRow label="Equity and Liabilities" value={doc.data.EquityAndLiabilities} isTotal />
           </TabsContent>
           
           <TabsContent value="metrics" className="flex-1 overflow-y-auto pr-1 mt-0">
@@ -122,7 +169,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ document }) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {((data.ProfitAfterTax / data.GrossProfit) * 100).toFixed(1)}%
+                    {((doc.data.ProfitAfterTax / doc.data.GrossProfit) * 100).toFixed(1)}%
                   </div>
                 </CardContent>
               </Card>
@@ -133,7 +180,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ document }) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {(data.TotalLiabilities / data.Equity).toFixed(2)}
+                    {(doc.data.TotalLiabilities / doc.data.Equity).toFixed(2)}
                   </div>
                 </CardContent>
               </Card>
@@ -144,7 +191,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ document }) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {((data.ProfitAfterTax / data.TotalAssets) * 100).toFixed(1)}%
+                    {((doc.data.ProfitAfterTax / doc.data.TotalAssets) * 100).toFixed(1)}%
                   </div>
                 </CardContent>
               </Card>
@@ -155,7 +202,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ document }) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {(data.CurrentAssets / data.ShortTermLiabilities).toFixed(2)}
+                    {(doc.data.CurrentAssets / doc.data.ShortTermLiabilities).toFixed(2)}
                   </div>
                 </CardContent>
               </Card>
@@ -166,7 +213,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ document }) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {(Math.abs(data.StaffCosts) / data.GrossProfit * 100).toFixed(1)}%
+                    {(Math.abs(doc.data.StaffCosts) / doc.data.GrossProfit * 100).toFixed(1)}%
                   </div>
                 </CardContent>
               </Card>
@@ -177,7 +224,7 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ document }) => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {(Math.abs(data.OtherOperatingExpenses) / data.GrossProfit * 100).toFixed(1)}%
+                    {(Math.abs(doc.data.OtherOperatingExpenses) / doc.data.GrossProfit * 100).toFixed(1)}%
                   </div>
                 </CardContent>
               </Card>

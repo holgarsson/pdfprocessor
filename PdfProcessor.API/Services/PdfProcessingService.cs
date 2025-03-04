@@ -18,7 +18,7 @@ public record ProcessingResult
 public interface IPdfProcessingService
 {
     Task<IReadOnlyList<ProcessingResult>> ProcessPdfFilesAsync(IFormFileCollection files, CancellationToken cancellationToken = default);
-    Task ProcessPdfFileAsync(IFormFile file, CancellationToken cancellationToken = default);
+    Task ProcessPdfFileAsync(IFormFile file, string fileName, CancellationToken cancellationToken = default);
     IAsyncEnumerable<ProcessedFile> GetAllProcessedFilesAsync(CancellationToken cancellationToken = default);
 }
 
@@ -95,12 +95,14 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
                     await semaphore.WaitAsync(cancellationToken);
                     try
                     {
-                        await ProcessPdfFileAsync(file, cancellationToken);
+                        string generatedFileName = $"{Guid.NewGuid()}_{file.FileName}";
+                        await ProcessPdfFileAsync(file, generatedFileName, cancellationToken);
+                        var processedFile = _processedFiles.GetValueOrDefault(generatedFileName);
                         var result = new ProcessingResult
                         {
                             FileName = file.FileName,
                             Success = true,
-                            ProcessedFile = _processedFiles.GetValueOrDefault(Path.Combine(Path.GetTempPath(), file.FileName))
+                            ProcessedFile = processedFile
                         };
                         results.Add(result);
                         return result;
@@ -128,7 +130,7 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
         return results.ToList();
     }
 
-    public async Task ProcessPdfFileAsync(IFormFile file, CancellationToken cancellationToken = default)
+    public async Task ProcessPdfFileAsync(IFormFile file, string fileName, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(file);
         
@@ -138,7 +140,6 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
             return;
         }
 
-        string fileName = $"{Guid.NewGuid()}_{file.FileName}";
         string tempPath = Path.Combine(Path.GetTempPath(), fileName);
         FileStream? writeStream = null;
         FileStream? readStream = null;
@@ -174,9 +175,10 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
             FinancialData financialData = await _geminiService.GetFinancialData(pdfBytes);
 
             _logger.LogInformation("Processed file: {FileName}", file.FileName);
+            _logger.LogInformation("Financial data: {FinancialData}", financialData);
 
             _processedFiles.TryAdd(
-                tempPath, 
+                fileName, 
                 new ProcessedFile(tempPath, _timeProvider.GetUtcNow().UtcDateTime, financialData));
         }
         catch (Exception ex)

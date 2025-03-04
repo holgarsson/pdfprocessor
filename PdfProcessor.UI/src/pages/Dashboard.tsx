@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import DropZone from '../components/DropZone';
@@ -7,17 +6,11 @@ import DocumentTable from '../components/DocumentTable';
 import DocumentDetails from '../components/DocumentDetails';
 import PDFViewer from '../components/PDFViewer';
 import { ProcessedDocument, ProcessingFile } from '../types/document';
-import { generateMockData, processFile } from '../utils/mockData';
+import { api } from '../services/api';
 import { Button } from '@/components/ui/button';
 import { LogOut, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
-
-// List of company names for generating random data
-const companyNames = [
-  "Acme Corporation", "Globex Corp", "Soylent Industries", "Initech LLC", 
-  "Massive Dynamic", "Stark Industries", "Wayne Enterprises", "Umbrella Corp"
-];
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -25,105 +18,56 @@ const Dashboard = () => {
   const [documents, setDocuments] = useState<ProcessedDocument[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<ProcessedDocument | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [viewingDetails, setViewingDetails] = useState(false);
 
-  // Load initial mock data
+  // Load documents from API
   useEffect(() => {
-    const mockData = generateMockData(20); // Generate more data for pagination testing
-    setDocuments(mockData);
+    const fetchDocuments = async () => {
+      try {
+        setIsLoading(true);
+        console.log('Fetching documents...');
+        const data = await api.getDocuments();
+        console.log('API Response:', data);
+        if (Array.isArray(data)) {
+          console.log('Setting documents:', data);
+          setDocuments(data);
+        } else {
+          console.error('Invalid response format:', data);
+          toast.error('Invalid response format from server');
+        }
+      } catch (error) {
+        console.error('Error fetching documents:', error);
+        toast.error('Failed to load documents');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDocuments();
   }, []);
 
-  const handleFilesAdded = (files: File[]) => {
-    // Create ProcessingFile objects for each file
-    const newProcessingFiles = files.map(file => ({
-      id: uuidv4(),
-      file,
-      progress: 0,
-      status: 'queued' as const
-    }));
-    
-    setProcessingFiles(prev => [...prev, ...newProcessingFiles]);
+  // Debug effect to monitor documents state
+  useEffect(() => {
+    console.log('Documents state updated:', documents);
+  }, [documents]);
+
+  const handleFileUpload = (file: ProcessingFile) => {
+    setProcessingFiles(prev => [...prev, file]);
     setIsProcessing(true);
-    
-    // Process files one by one
-    processFilesSequentially(newProcessingFiles);
   };
 
-  const processFilesSequentially = async (filesToProcess: ProcessingFile[]) => {
-    for (const fileInfo of filesToProcess) {
-      try {
-        // Update file status to processing
-        setProcessingFiles(prev => 
-          prev.map(f => f.id === fileInfo.id 
-            ? { ...f, status: 'processing' as const } 
-            : f
-          )
-        );
-        
-        // Process file with simulated progress updates
-        const progressInterval = setInterval(() => {
-          setProcessingFiles(prev => 
-            prev.map(f => f.id === fileInfo.id 
-              ? { ...f, progress: Math.min(f.progress + 5, 95) } 
-              : f
-            )
-          );
-        }, 200);
-        
-        // Wait for processing to complete
-        const data = await processFile(fileInfo.file);
-        
-        // Clear progress interval
-        clearInterval(progressInterval);
-        
-        // Update processing file to completed
-        setProcessingFiles(prev => 
-          prev.map(f => f.id === fileInfo.id 
-            ? { ...f, status: 'completed' as const, progress: 100 } 
-            : f
-          )
-        );
-        
-        // Generate random company information
-        const companyName = companyNames[Math.floor(Math.random() * companyNames.length)];
-        const companyId = `C${String(Math.floor(1000 + Math.random() * 9000)).padStart(4, '0')}`;
-        
-        // Add processed document to documents list
-        const newDocument: ProcessedDocument = {
-          id: fileInfo.id,
-          companyId,
-          companyName,
-          fileName: fileInfo.file.name,
-          uploadDate: new Date(),
-          processedDate: new Date(),
-          data
-        };
-        
-        setDocuments(prev => [newDocument, ...prev]);
-        
-        toast.success(`Processed: ${fileInfo.file.name}`);
-      } catch (error) {
-        console.error(`Error processing file ${fileInfo.file.name}:`, error);
-        
-        // Update file status to error
-        setProcessingFiles(prev => 
-          prev.map(f => f.id === fileInfo.id 
-            ? { ...f, status: 'error' as const, error: 'Processing failed' } 
-            : f
-          )
-        );
-        
-        toast.error(`Failed to process: ${fileInfo.file.name}`);
-      }
-    }
-    
-    // Once all files are processed, update isProcessing state
+  const handleUploadComplete = (document: ProcessedDocument) => {
+    console.log('Upload complete, adding document:', document);
+    setDocuments(prev => [document, ...prev]);
+    setProcessingFiles(prev => prev.filter(f => f.id !== document.id));
     setIsProcessing(false);
-    
-    // After 5 seconds, clear completed files from the processing list
-    setTimeout(() => {
-      setProcessingFiles(prev => prev.filter(f => f.status !== 'completed'));
-    }, 5000);
+    toast.success(`Processed: ${document.fileName}`);
+  };
+
+  const handleUploadError = (error: string) => {
+    toast.error(error);
+    setIsProcessing(false);
   };
 
   const handleSelectDocument = (document: ProcessedDocument) => {
@@ -182,25 +126,31 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 gap-6">
             <section>
               <h2 className="text-lg font-medium mb-3">Upload Documents</h2>
-              <DropZone onFilesAdded={handleFilesAdded} isProcessing={isProcessing} />
+              <DropZone 
+                onFileUpload={handleFileUpload}
+                onUploadComplete={handleUploadComplete}
+                onUploadError={handleUploadError}
+              />
             </section>
             
             {processingFiles.length > 0 && (
               <section>
-                <ProcessingIndicator files={processingFiles} />
-              </section>
-            )}
-            
-            {documents.length > 0 && (
-              <section className="space-y-3">
-                <h2 className="text-lg font-medium">Documents</h2>
-                <DocumentTable 
-                  documents={documents} 
-                  onSelectDocument={handleSelectDocument}
-                  selectedDocument={selectedDocument}
+                <ProcessingIndicator 
+                  files={processingFiles} 
+                  onUploadComplete={handleUploadComplete}
                 />
               </section>
             )}
+            
+            <section className="space-y-3">
+              <h2 className="text-lg font-medium">Documents</h2>
+              <DocumentTable 
+                onSelectDocument={handleSelectDocument}
+                selectedDocument={selectedDocument}
+                documents={documents}
+                isLoading={isLoading}
+              />
+            </section>
           </div>
         )}
       </main>

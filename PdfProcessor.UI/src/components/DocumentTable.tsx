@@ -1,29 +1,31 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ProcessedDocument } from '../types/document';
 import { SearchIcon, SortAsc, SortDesc, Check, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
-import { formatCurrency } from '../utils/mockData';
+import { api } from '../services/api';
 
 interface DocumentTableProps {
-  documents: ProcessedDocument[];
   onSelectDocument: (document: ProcessedDocument) => void;
   selectedDocument: ProcessedDocument | null;
+  documents: ProcessedDocument[];
+  isLoading?: boolean;
 }
 
 type SortField = keyof ProcessedDocument | 'data.GrossProfit' | 'data.ProfitAfterTax' | 'data.TotalAssets';
 type SortDirection = 'asc' | 'desc';
 
 const DocumentTable: React.FC<DocumentTableProps> = ({ 
-  documents, 
   onSelectDocument,
-  selectedDocument 
+  selectedDocument,
+  documents,
+  isLoading = false
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<SortField>('uploadDate');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [error, setError] = useState<string | null>(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,9 +43,7 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
 
   // Filter documents by search term
   const filteredDocuments = documents.filter(doc => 
-    doc.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.companyId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.fileName.toLowerCase().includes(searchTerm.toLowerCase())
+    doc.fileName?.toLowerCase().includes(searchTerm.toLowerCase()) || false
   );
 
   // Sort documents
@@ -52,14 +52,14 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
     
     // Handle nested fields
     if (sortField === 'data.GrossProfit') {
-      valueA = a.data.GrossProfit;
-      valueB = b.data.GrossProfit;
+      valueA = a.data?.GrossProfit || 0;
+      valueB = b.data?.GrossProfit || 0;
     } else if (sortField === 'data.ProfitAfterTax') {
-      valueA = a.data.ProfitAfterTax;
-      valueB = b.data.ProfitAfterTax;
+      valueA = a.data?.ProfitAfterTax || 0;
+      valueB = b.data?.ProfitAfterTax || 0;
     } else if (sortField === 'data.TotalAssets') {
-      valueA = a.data.TotalAssets;
-      valueB = b.data.TotalAssets;
+      valueA = a.data?.TotalAssets || 0;
+      valueB = b.data?.TotalAssets || 0;
     } else {
       valueA = a[sortField as keyof ProcessedDocument];
       valueB = b[sortField as keyof ProcessedDocument];
@@ -96,12 +96,28 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
 
   // Format date for display
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
+    return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-500">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -244,9 +260,9 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
                     </TableCell>
                     <TableCell>{doc.fileName}</TableCell>
                     <TableCell>{formatDate(doc.uploadDate)}</TableCell>
-                    <TableCell>{formatCurrency(doc.data.GrossProfit)}</TableCell>
-                    <TableCell>{formatCurrency(doc.data.ProfitAfterTax)}</TableCell>
-                    <TableCell>{formatCurrency(doc.data.TotalAssets)}</TableCell>
+                    <TableCell>{api.formatCurrency(doc.data?.GrossProfit || 0)}</TableCell>
+                    <TableCell>{api.formatCurrency(doc.data?.ProfitAfterTax || 0)}</TableCell>
+                    <TableCell>{api.formatCurrency(doc.data?.TotalAssets || 0)}</TableCell>
                   </TableRow>
                 ))
               )}
@@ -255,14 +271,10 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
         </div>
       </div>
 
-      {/* Pagination controls */}
+      {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between py-4">
-          <div className="flex-1 text-sm text-muted-foreground">
-            Showing <span className="font-medium">{indexOfFirstItem + 1}</span> to <span className="font-medium">{Math.min(indexOfLastItem, sortedDocuments.length)}</span> of{" "}
-            <span className="font-medium">{sortedDocuments.length}</span> results
-          </div>
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -279,35 +291,11 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                // Show pages around the current page
-                let pageToShow = currentPage - 2 + i;
-                
-                // Adjust if we're at the beginning or end
-                if (currentPage < 3) {
-                  pageToShow = i + 1;
-                } else if (currentPage > totalPages - 2) {
-                  pageToShow = totalPages - 4 + i;
-                }
-                
-                // Ensure page is in valid range
-                if (pageToShow > 0 && pageToShow <= totalPages) {
-                  return (
-                    <Button
-                      key={pageToShow}
-                      variant={currentPage === pageToShow ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => goToPage(pageToShow)}
-                      className="h-8 w-8 p-0"
-                    >
-                      {pageToShow}
-                    </Button>
-                  );
-                }
-                return null;
-              })}
-            </div>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </div>
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
