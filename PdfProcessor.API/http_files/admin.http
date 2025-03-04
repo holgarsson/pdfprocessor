@@ -34,8 +34,27 @@ Content-Type: multipart/form-data; boundary=--boundary--
 Content-Disposition: form-data; name="files"; filename="challenge_1.pdf"
 Content-Type: application/pdf
 
-< ./files/challenge_1.pdf
+< ../Services/LLMIntegration/TestFiles/challenge_1.pdf
 ----boundary----
+
+### Upload multiple PDF files
+POST {{baseUrl}}/api/pdf/process
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="files"; filename="challenge_1.pdf"
+Content-Type: application/pdf
+
+< ../Services/LLMIntegration/TestFiles/challenge_1.pdf
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="files"; filename="challenge_2.pdf"
+Content-Type: application/pdf
+
+< ../Services/LLMIntegration/TestFiles/challenge_2.pdf
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ### List all processed files 
 GET {{baseUrl}}/api/pdf/processed

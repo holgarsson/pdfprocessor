@@ -20,13 +20,13 @@ public class JwtService
 
     public async Task<string> GenerateToken(ApplicationUser user)
     {
-        var key = new SymmetricSecurityKey(
+        SymmetricSecurityKey key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? 
                 throw new InvalidOperationException("JWT Key not configured")));
-        
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        
-        var claims = new List<Claim>
+
+        SigningCredentials credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        List<Claim> claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id),
             new(ClaimTypes.Email, user.Email ?? string.Empty),
@@ -41,10 +41,10 @@ public class JwtService
             claims.Add(new Claim(ClaimTypes.Surname, user.LastName));
 
         // Add roles to claims
-        var roles = await _userManager.GetRolesAsync(user);
+        IList<string> roles = await _userManager.GetRolesAsync(user);
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
-        var token = new JwtSecurityToken(
+        JwtSecurityToken token = new JwtSecurityToken(
             issuer: _configuration["Jwt:Issuer"],
             audience: _configuration["Jwt:Audience"],
             claims: claims,

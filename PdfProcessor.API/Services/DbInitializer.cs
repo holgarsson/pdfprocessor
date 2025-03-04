@@ -10,8 +10,8 @@ public static class DbInitializer
         RoleManager<IdentityRole> roleManager)
     {
         // Create roles
-        var roles = new[] { "Admin", "User" };
-        foreach (var role in roles)
+        string[] roles = new[] { "Admin", "User" };
+        foreach (string? role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
             {
@@ -20,8 +20,8 @@ public static class DbInitializer
         }
 
         // Create admin user
-        var adminEmail = "admin@pdfprocessor.com";
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+        string adminEmail = "admin@pdfprocessor.com";
+        ApplicationUser? adminUser = await userManager.FindByEmailAsync(adminEmail);
         
         if (adminUser == null)
         {
@@ -34,7 +34,7 @@ public static class DbInitializer
                 EmailConfirmed = true
             };
 
-            var result = await userManager.CreateAsync(adminUser, "Admin123!");
+            IdentityResult result = await userManager.CreateAsync(adminUser, "Admin123!");
             if (result.Succeeded)
             {
                 await userManager.AddToRoleAsync(adminUser, "Admin");

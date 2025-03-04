@@ -12,12 +12,12 @@ public class UserService(
 
     public async Task<IEnumerable<UserResponse>> GetAllUsers()
     {
-        var users = _userManager.Users.ToList();
-        var userResponses = new List<UserResponse>();
+        List<ApplicationUser> users = _userManager.Users.ToList();
+        List<UserResponse> userResponses = new List<UserResponse>();
 
-        foreach (var user in users)
+        foreach (ApplicationUser? user in users)
         {
-            var roles = await _userManager.GetRolesAsync(user);
+            IList<string> roles = await _userManager.GetRolesAsync(user);
             userResponses.Add(new UserResponse(
                 user.Id,
                 user.Email ?? string.Empty,
@@ -34,10 +34,10 @@ public class UserService(
 
     public async Task<UserResponse?> GetUserById(string id)
     {
-        var user = await _userManager.FindByIdAsync(id);
+        ApplicationUser? user = await _userManager.FindByIdAsync(id);
         if (user == null) return null;
 
-        var roles = await _userManager.GetRolesAsync(user);
+        IList<string> roles = await _userManager.GetRolesAsync(user);
         return new UserResponse(
             user.Id,
             user.Email ?? string.Empty,
@@ -51,7 +51,7 @@ public class UserService(
 
     public async Task<IdentityResult> UpdateUser(string id, UpdateUserRequest request)
     {
-        var user = await _userManager.FindByIdAsync(id);
+        ApplicationUser? user = await _userManager.FindByIdAsync(id);
         if (user == null) 
             return IdentityResult.Failed(new IdentityError 
             { 
@@ -61,11 +61,11 @@ public class UserService(
 
         if (request.Email != null && request.Email != user.Email)
         {
-            var setEmailResult = await _userManager.SetEmailAsync(user, request.Email);
+            IdentityResult setEmailResult = await _userManager.SetEmailAsync(user, request.Email);
             if (!setEmailResult.Succeeded) return setEmailResult;
             
             user.UserName = request.Email;
-            var setUsernameResult = await _userManager.UpdateAsync(user);
+            IdentityResult setUsernameResult = await _userManager.UpdateAsync(user);
             if (!setUsernameResult.Succeeded) return setUsernameResult;
         }
 
@@ -78,24 +78,24 @@ public class UserService(
         if (request.IsActive.HasValue)
             user.IsActive = request.IsActive.Value;
 
-        var result = await _userManager.UpdateAsync(user);
+        IdentityResult result = await _userManager.UpdateAsync(user);
         if (!result.Succeeded) return result;
 
         if (request.Roles != null)
         {
-            var currentRoles = await _userManager.GetRolesAsync(user);
-            var rolesToRemove = currentRoles.Except(request.Roles);
-            var rolesToAdd = request.Roles.Except(currentRoles);
+            IList<string> currentRoles = await _userManager.GetRolesAsync(user);
+            IEnumerable<string> rolesToRemove = currentRoles.Except(request.Roles);
+            IEnumerable<string> rolesToAdd = request.Roles.Except(currentRoles);
 
             if (rolesToRemove.Any())
             {
-                var removeResult = await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
+                IdentityResult removeResult = await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
                 if (!removeResult.Succeeded) return removeResult;
             }
 
             if (rolesToAdd.Any())
             {
-                var addResult = await _userManager.AddToRolesAsync(user, rolesToAdd);
+                IdentityResult addResult = await _userManager.AddToRolesAsync(user, rolesToAdd);
                 if (!addResult.Succeeded) return addResult;
             }
         }
@@ -105,7 +105,7 @@ public class UserService(
 
     public async Task<IdentityResult> DeleteUser(string id)
     {
-        var user = await _userManager.FindByIdAsync(id);
+        ApplicationUser? user = await _userManager.FindByIdAsync(id);
         if (user == null)
             return IdentityResult.Failed(new IdentityError
             {
@@ -118,7 +118,7 @@ public class UserService(
 
     public async Task<IdentityResult> ChangePassword(string userId, string currentPassword, string newPassword)
     {
-        var user = await _userManager.FindByIdAsync(userId);
+        ApplicationUser? user = await _userManager.FindByIdAsync(userId);
         if (user == null)
             return IdentityResult.Failed(new IdentityError
             {

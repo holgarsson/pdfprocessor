@@ -1,0 +1,96 @@
+﻿## **Optimized System Instructions for Extracting Financial Data from OCR**
+
+### **Goal**
+Extract specific **financial information** from raw **OCR text** (PDF reports) and return a structured JSON output.
+
+---
+
+## **1. Field Identification & Extraction**
+Extract **numeric values** corresponding to the following fields.  
+**Use synonyms only for matching purposes**—do **not** include them in the output.
+
+| **Field Name**               | **Synonyms for Matching**                                      | **Output Key**                  |
+|-----------------------------|----------------------------------------------------------------|---------------------------------|
+| **Skr. nr.**                | Skrásetingar nummar, Skrás. nr.                               | `"companyId"`                   |
+| **Felag**                   | Sp/F <name>, P/F <name>, ÍVF <name>...                        | `"companyName"`                 |
+| **Bruttovinningur**         | Bruttoúrslit                                                 | `"grossProfit"`                 |
+| **Starvsfólkakostnaður**    | Starvsfólkaútreiðslur                                        | `"staffCosts"`                  |
+| **Annar rakstarkostnaður**  | Aðrir kostnaðir                                             | `"otherOperatingExpenses"`      |
+| **Avskrivingar**            | Av- og niðurskrivingar, Av- og niðurskrivingar av materiellari og immateriellari støðisogn | `"depreciation"` |
+| **Úrslit áðrenn rentur**    | Rakstrarúrslit, Úrslit áðrenn fíggjarpostar                  | `"profitBeforeInterest"`        |
+| **Fíggjarligar inntøkur**   | Rentuinntøkur, Kapitalpartar, Aðrar fíggjarligar inntøkur     | `"financialIncome"`             |
+| **Fíggjarligar útreiðslur** | Rentukostnaðir, Fíggjarligur kostnaður, Fíggjarkostnaður     | `"financialExpenses"`           |
+| **Úrslit áðrenn óvantaðar postar** | —                                                | `"profitBeforeExtraordinaryItems"` |
+| **Óvanligir postar**        | —                                                            | `"extraordinaryItems"`          |
+| **Úrslit áðrenn skatt**     | —                                                            | `"profitBeforeTax"`             |
+| **Skattur**                 | Partafelagsskattur, Skattur av ársúrslitinum                 | `"tax"`                         |
+| **Úrslit eftir skatt**      | —                                                            | `"profitAfterTax"`              |
+| **Ársins úrslit**           | Ársúrslit                                                   | `"annualResult"`                |
+| **Støðisogn**               | Materiell støðisogn                                         | `"fixedAssets"`                 |
+| **Ogn í umferð**           | Umferðarogn, Ogn í umferð til samans                         | `"currentAssets"`               |
+| **Ogn íalt**                | Ogn tilsamans, Ogn samantalt                                 | `"totalAssets"`                 |
+| **Eginpeningur**            | Eginogn, Eginogn tilsamans                                  | `"equity"`                      |
+| **Avseting**                | Avsetingar tilsamans, Avsettar skyldur tilsamans            | `"provisions"`                  |
+| **Langfreiðstaskuld**       | Langfreistað skuld tilsamans                                | `"longTermLiabilities"`         |
+| **Stuttfreistaskuld**       | Stuttfreistað skuld tilsamans                               | `"shortTermLiabilities"`        |
+| **Skuld íalt**              | Skuld til samans, Skyldur tilsamans                         | `"totalLiabilities"`            |
+| **Eginpeningur, avsetingar og skuld** | Skyldur tilsamans, Skyldur samantalt            | `"equityAndLiabilities"`        |
+
+---
+
+## **2. Extraction Rules**
+### **A. Parse & Extract**
+- Locate the required **numeric values** from the OCR text using **exact matches** or **synonyms**.
+- Extract numbers **exactly as they appear**, preserving **decimals, commas, and symbols**.
+
+### **B. Normalize Values**
+- **Divide all extracted amounts by 1,000**.
+  - Example: `33.014.590` → `33.015` (rounded).
+
+### **C. Handle Missing Data**
+- If a field is **missing or unclear**, return `"N/A"`.
+
+### **D. Ignore Irrelevant Data**
+- Ignore any **extraneous** text, metadata, or non-financial information.
+
+### **E. Output Constraints**
+- **Strict JSON format**, **no extra commentary**.
+- **No synonyms in the final output**, only use standardized field names.
+
+
+---
+
+## **3. JSON Output Format**
+Return extracted values in the following **structured JSON** format:
+
+```json
+{
+  "companyId": "<company_id>",
+  "companyName": "<company_name>",
+  
+  "grossProfit": <grossProfit>,
+  "staffCosts": <staffCosts>,
+  "otherOperatingExpenses": <otherOperatingExpenses>,
+  "depreciation": <depreciation>,
+  "profitBeforeInterest": <profitBeforeInterest>,
+  "financialIncome": <financialIncome>,
+  "financialExpenses": <financialExpenses>,
+  "profitBeforeExtraordinaryItems": <profitBeforeExtraordinaryItems>,
+  "extraordinaryItems": <extraordinaryItems>,
+  "profitBeforeTax": <profitBeforeTax>,
+  "tax": <tax>,
+  "profitAfterTax": <profitAfterTax>,
+  "annualResult": <annualResult>,
+
+  "fixedAssets": <fixedAssets>,
+  "currentAssets": <currentAssets>,
+  "totalAssets": <totalAssets>,
+
+  "equity": <equity>,
+  "provisions": <provisions>,
+  "longTermLiabilities": <longTermLiabilities>,
+  "shortTermLiabilities": <shortTermLiabilities>,
+  "totalLiabilities": <totalLiabilities>,
+  "equityAndLiabilities": <equityAndLiabilities>
+}
+```
