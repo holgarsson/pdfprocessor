@@ -7,8 +7,7 @@ public static class PdfEndpoints
 {
     public static void MapPdfEndpoints(this IEndpointRouteBuilder app)
     {
-        RouteGroupBuilder pdfGroup = app.MapGroup("/api/pdf")
-            .RequireAuthorization(ConfigurationConstants.Policies.RequireAdminRole);
+        RouteGroupBuilder pdfGroup = app.MapGroup("/api/pdf");
 
         pdfGroup.MapPost("/process", async (
             IFormFileCollection files,
@@ -59,6 +58,27 @@ public static class PdfEndpoints
         .WithName("GetAllProcessedFiles")
         .WithSummary("Get all processed files")
         .WithDescription("Retrieves a list of all processed files")
+        .WithTags("PDF Processing");
+
+        pdfGroup.MapGet("/file/{id}", async (
+            string id,
+            IPdfProcessingService pdfProcessingService,
+            CancellationToken cancellationToken) =>
+        {
+            ProcessedFile? file = await pdfProcessingService.GetProcessedFileAsync(id, cancellationToken);
+            if (file == null)
+                return Results.NotFound();
+
+
+            Console.WriteLine("File Path: ");
+            Console.WriteLine(file.FilePath);
+
+
+            return Results.File(file.FilePath, "application/pdf", file.FilePath.Split('\\').Last());
+        })
+        .WithName("GetPdfFile")
+        .WithSummary("Get PDF file")
+        .WithDescription("Retrieves a specific PDF file by its ID")
         .WithTags("PDF Processing");
     }
 } 

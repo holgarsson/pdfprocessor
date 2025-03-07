@@ -1,7 +1,10 @@
-import { ProcessedDocument, FinancialStatement } from '../types/document';
+import { ProcessedDocument } from '../types';
 import { config } from '../config';
 
 const API_BASE_URL = `${config.apiUrl}/api`;
+
+// Cache to store uploaded files
+const fileCache = new Map<string, File>();
 
 // Get auth token from localStorage
 const getAuthToken = () => {
@@ -21,55 +24,55 @@ export const api = {
   // Get all processed documents
   async getDocuments(): Promise<ProcessedDocument[]> {
     const response = await fetch(`${API_BASE_URL}/pdf/processed`, {
-      headers: getAuthHeaders()
-    });
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Unauthorized');
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
       }
+    });
+
+    if (!response.ok) {
       throw new Error('Failed to fetch documents');
     }
-    const data = await response.json();
-    
-    // Transform the backend ProcessedFile model to our frontend ProcessedDocument model
-    return data.map((file: any) => {
-      // Extract just the filename without the path
-      const fileName = file.filePath.split('\\').pop()?.split('/').pop() || '';
-      
-      // Transform financial data from camelCase to PascalCase
-      const transformedData = {
-        GrossProfit: file.financialData?.grossProfit || 0,
-        StaffCosts: file.financialData?.staffCosts || 0,
-        OtherOperatingExpenses: file.financialData?.otherOperatingExpenses || 0,
-        Depreciation: file.financialData?.depreciation || 0,
-        ProfitBeforeInterest: file.financialData?.profitBeforeInterest || 0,
-        FinancialIncome: file.financialData?.financialIncome || 0,
-        FinancialExpenses: file.financialData?.financialExpenses || 0,
-        ProfitBeforeExtraordinaryItems: file.financialData?.profitBeforeExtraordinaryItems || 0,
-        ExtraordinaryItems: file.financialData?.extraordinaryItems || 0,
-        ProfitBeforeTax: file.financialData?.profitBeforeTax || 0,
-        Tax: file.financialData?.tax || 0,
-        ProfitAfterTax: file.financialData?.profitAfterTax || 0,
-        AnnualResult: file.financialData?.annualResult || 0,
-        FixedAssets: file.financialData?.fixedAssets || 0,
-        CurrentAssets: file.financialData?.currentAssets || 0,
-        TotalAssets: file.financialData?.totalAssets || 0,
-        Equity: file.financialData?.equity || 0,
-        Provisions: file.financialData?.provisions || 0,
-        LongTermLiabilities: file.financialData?.longTermLiabilities || 0,
-        ShortTermLiabilities: file.financialData?.shortTermLiabilities || 0,
-        TotalLiabilities: file.financialData?.totalLiabilities || 0,
-        EquityAndLiabilities: file.financialData?.equityAndLiabilities || 0
-      };
 
+    const data = await response.json();
+    console.log('Raw API response:', data); // Debug log
+
+    return data.map((doc: any) => {
+      if (!doc.id) {
+        console.warn('Document missing ID:', doc); // Debug log
+      }
+      
       return {
-        id: fileName,
-        companyId: file.financialData?.companyId?.toString() || '',
-        companyName: file.financialData?.companyName || 'Unknown Company',
-        fileName: fileName,
-        uploadDate: new Date(file.processedTime),
-        processedDate: new Date(file.processedTime),
-        data: transformedData
+        id: doc.id || doc.filePath.split('\\').pop()?.split('/').pop() || String(Date.now()), // Ensure id is always set with a fallback
+        companyId: doc.financialData?.companyId?.toString() || '',
+        companyName: doc.financialData?.companyName || 'Unknown Company',
+        fileName: doc.filePath.split('\\').pop(),
+        uploadDate: new Date(doc.processedTime),
+        processedDate: new Date(doc.processedTime),
+        file: null,
+        data: {
+          GrossProfit: doc.financialData?.grossProfit || 0,
+          StaffCosts: doc.financialData?.staffCosts || 0,
+          OtherOperatingExpenses: doc.financialData?.otherOperatingExpenses || 0,
+          Depreciation: doc.financialData?.depreciation || 0,
+          ProfitBeforeInterest: doc.financialData?.profitBeforeInterest || 0,
+          FinancialIncome: doc.financialData?.financialIncome || 0,
+          FinancialExpenses: doc.financialData?.financialExpenses || 0,
+          ProfitBeforeExtraordinaryItems: doc.financialData?.profitBeforeExtraordinaryItems || 0,
+          ExtraordinaryItems: doc.financialData?.extraordinaryItems || 0,
+          ProfitBeforeTax: doc.financialData?.profitBeforeTax || 0,
+          Tax: doc.financialData?.tax || 0,
+          ProfitAfterTax: doc.financialData?.profitAfterTax || 0,
+          AnnualResult: doc.financialData?.annualResult || 0,
+          FixedAssets: doc.financialData?.fixedAssets || 0,
+          CurrentAssets: doc.financialData?.currentAssets || 0,
+          TotalAssets: doc.financialData?.totalAssets || 0,
+          Equity: doc.financialData?.equity || 0,
+          Provisions: doc.financialData?.provisions || 0,
+          LongTermLiabilities: doc.financialData?.longTermLiabilities || 0,
+          ShortTermLiabilities: doc.financialData?.shortTermLiabilities || 0,
+          TotalLiabilities: doc.financialData?.totalLiabilities || 0,
+          EquityAndLiabilities: doc.financialData?.equityAndLiabilities || 0
+        }
       };
     });
   },
@@ -77,53 +80,48 @@ export const api = {
   // Get a single document by ID
   async getDocument(id: string): Promise<ProcessedDocument> {
     const response = await fetch(`${API_BASE_URL}/pdf/processed/${id}`, {
-      headers: getAuthHeaders()
-    });
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Unauthorized');
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
       }
+    });
+
+    if (!response.ok) {
       throw new Error('Failed to fetch document');
     }
-    const file = await response.json();
-    
-    // Extract just the filename without the path
-    const fileName = file.filePath.split('\\').pop()?.split('/').pop() || '';
-    
-    // Transform financial data from camelCase to PascalCase
-    const transformedData = {
-      GrossProfit: file.financialData?.grossProfit || 0,
-      StaffCosts: file.financialData?.staffCosts || 0,
-      OtherOperatingExpenses: file.financialData?.otherOperatingExpenses || 0,
-      Depreciation: file.financialData?.depreciation || 0,
-      ProfitBeforeInterest: file.financialData?.profitBeforeInterest || 0,
-      FinancialIncome: file.financialData?.financialIncome || 0,
-      FinancialExpenses: file.financialData?.financialExpenses || 0,
-      ProfitBeforeExtraordinaryItems: file.financialData?.profitBeforeExtraordinaryItems || 0,
-      ExtraordinaryItems: file.financialData?.extraordinaryItems || 0,
-      ProfitBeforeTax: file.financialData?.profitBeforeTax || 0,
-      Tax: file.financialData?.tax || 0,
-      ProfitAfterTax: file.financialData?.profitAfterTax || 0,
-      AnnualResult: file.financialData?.annualResult || 0,
-      FixedAssets: file.financialData?.fixedAssets || 0,
-      CurrentAssets: file.financialData?.currentAssets || 0,
-      TotalAssets: file.financialData?.totalAssets || 0,
-      Equity: file.financialData?.equity || 0,
-      Provisions: file.financialData?.provisions || 0,
-      LongTermLiabilities: file.financialData?.longTermLiabilities || 0,
-      ShortTermLiabilities: file.financialData?.shortTermLiabilities || 0,
-      TotalLiabilities: file.financialData?.totalLiabilities || 0,
-      EquityAndLiabilities: file.financialData?.equityAndLiabilities || 0
-    };
-    
+
+    const data = await response.json();
     return {
-      id: fileName,
-      companyId: file.financialData?.companyId?.toString() || '',
-      companyName: file.financialData?.companyName || 'Unknown Company',
-      fileName: fileName,
-      uploadDate: new Date(file.processedTime),
-      processedDate: new Date(file.processedTime),
-      data: transformedData
+      id: data.id,
+      companyId: data.financialData?.companyId?.toString() || '',
+      companyName: data.financialData?.companyName || 'Unknown Company',
+      fileName: data.filePath.split('\\').pop(),
+      uploadDate: new Date(data.processedTime),
+      processedDate: new Date(data.processedTime),
+      file: null,
+      data: {
+        GrossProfit: data.financialData?.grossProfit || 0,
+        StaffCosts: data.financialData?.staffCosts || 0,
+        OtherOperatingExpenses: data.financialData?.otherOperatingExpenses || 0,
+        Depreciation: data.financialData?.depreciation || 0,
+        ProfitBeforeInterest: data.financialData?.profitBeforeInterest || 0,
+        FinancialIncome: data.financialData?.financialIncome || 0,
+        FinancialExpenses: data.financialData?.financialExpenses || 0,
+        ProfitBeforeExtraordinaryItems: data.financialData?.profitBeforeExtraordinaryItems || 0,
+        ExtraordinaryItems: data.financialData?.extraordinaryItems || 0,
+        ProfitBeforeTax: data.financialData?.profitBeforeTax || 0,
+        Tax: data.financialData?.tax || 0,
+        ProfitAfterTax: data.financialData?.profitAfterTax || 0,
+        AnnualResult: data.financialData?.annualResult || 0,
+        FixedAssets: data.financialData?.fixedAssets || 0,
+        CurrentAssets: data.financialData?.currentAssets || 0,
+        TotalAssets: data.financialData?.totalAssets || 0,
+        Equity: data.financialData?.equity || 0,
+        Provisions: data.financialData?.provisions || 0,
+        LongTermLiabilities: data.financialData?.longTermLiabilities || 0,
+        ShortTermLiabilities: data.financialData?.shortTermLiabilities || 0,
+        TotalLiabilities: data.financialData?.totalLiabilities || 0,
+        EquityAndLiabilities: data.financialData?.equityAndLiabilities || 0
+      }
     };
   },
 
@@ -155,6 +153,9 @@ export const api = {
     const processedFile = result.results[0].processedFile;
     const fileName = processedFile.filePath.split('\\').pop()?.split('/').pop() || '';
 
+    // Store the file in memory cache
+    fileCache.set(fileName, file);
+
     // Transform financial data from camelCase to PascalCase
     const transformedData = {
       GrossProfit: processedFile.financialData?.grossProfit || 0,
@@ -182,13 +183,14 @@ export const api = {
     };
 
     return {
-      id: fileName,
+      id: result.results[0].id,
       companyId: processedFile.financialData?.companyId?.toString() || '',
       companyName: processedFile.financialData?.companyName || 'Unknown Company',
       fileName: fileName,
       uploadDate: new Date(),
       processedDate: new Date(processedFile.processedTime),
-      data: transformedData
+      data: transformedData,
+      file: file
     };
   },
 
@@ -208,9 +210,30 @@ export const api = {
 
   // Format currency values
   formatCurrency(value: number): string {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('da-DK', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'DKK',
+      minimumFractionDigits: 0,
     }).format(value);
+  },
+
+  async getPdfFile(id: string): Promise<Blob> {
+    const response = await fetch(`${API_BASE_URL}/pdf/file/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Unauthorized');
+      }
+      if (response.status === 404) {
+        throw new Error('File not found');
+      }
+      throw new Error('Failed to fetch PDF file');
+    }
+
+    return response.blob();
   }
 }; 

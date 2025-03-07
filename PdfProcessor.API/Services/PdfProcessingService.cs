@@ -9,6 +9,7 @@ public record ProcessedFile(string FilePath, DateTime ProcessedTime = default, F
 
 public record ProcessingResult
 {
+    public required string Id { get; init; }
     public required string FileName { get; init; }
     public bool Success { get; init; }
     public string? Error { get; init; }
@@ -20,6 +21,7 @@ public interface IPdfProcessingService
     Task<IReadOnlyList<ProcessingResult>> ProcessPdfFilesAsync(IFormFileCollection files, CancellationToken cancellationToken = default);
     Task ProcessPdfFileAsync(IFormFile file, string fileName, CancellationToken cancellationToken = default);
     IAsyncEnumerable<ProcessedFile> GetAllProcessedFilesAsync(CancellationToken cancellationToken = default);
+    Task<ProcessedFile?> GetProcessedFileAsync(string id, CancellationToken cancellationToken);
 }
 
 public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
@@ -45,38 +47,6 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
         _cleanupTimer = new Timer(CleanupExpiredFiles, null, TimeSpan.Zero, TimeSpan.FromHours(1));
     }
 
-    private void CleanupExpiredFiles(object? state)
-    {
-        try
-        {
-            DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
-            var expiredFiles = _processedFiles
-                .Where(f => (now - f.Value.ProcessedTime) > _fileExpirationTime)
-                .ToList();
-
-            foreach (var file in expiredFiles)
-            {
-                try
-                {
-                    if (File.Exists(file.Value.FilePath))
-                    {
-                        File.Delete(file.Value.FilePath);
-                        _logger.LogInformation("Deleted expired file: {FilePath}", file.Value.FilePath);
-                    }
-                    _processedFiles.TryRemove(file.Key, out _);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error deleting expired file: {FilePath}", file.Value.FilePath);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during cleanup of expired files");
-        }
-    }
-
     public async Task<IReadOnlyList<ProcessingResult>> ProcessPdfFilesAsync(IFormFileCollection files, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(files);
@@ -90,16 +60,17 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
             .Where(file => file.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase))
             .Select(async file =>
             {
+                string fileId = Guid.NewGuid().ToString();
                 try
                 {
                     await semaphore.WaitAsync(cancellationToken);
                     try
                     {
-                        string generatedFileName = $"{Guid.NewGuid()}_{file.FileName}";
-                        await ProcessPdfFileAsync(file, generatedFileName, cancellationToken);
-                        var processedFile = _processedFiles.GetValueOrDefault(generatedFileName);
+                        await ProcessPdfFileAsync(file, fileId, cancellationToken);
+                        var processedFile = _processedFiles.GetValueOrDefault(fileId);
                         var result = new ProcessingResult
                         {
+                            Id = fileId,
                             FileName = file.FileName,
                             Success = true,
                             ProcessedFile = processedFile
@@ -117,6 +88,7 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
                     _logger.LogError(ex, "Error processing file: {FileName}", file.FileName);
                     var result = new ProcessingResult
                     {
+                        Id = fileId,
                         FileName = file.FileName,
                         Success = false,
                         Error = ex.Message
@@ -127,10 +99,10 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
             });
 
         await Task.WhenAll(processingTasks);
-        return results.ToList();
+        return [.. results];
     }
 
-    public async Task ProcessPdfFileAsync(IFormFile file, string fileName, CancellationToken cancellationToken = default)
+    public async Task ProcessPdfFileAsync(IFormFile file, string fileId, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(file);
         
@@ -140,7 +112,7 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
             return;
         }
 
-        string tempPath = Path.Combine(Path.GetTempPath(), fileName);
+        string tempPath = Path.Combine(Path.GetTempPath(), fileId);
         FileStream? writeStream = null;
         FileStream? readStream = null;
         MemoryStream? memoryStream = null;
@@ -178,7 +150,7 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
             _logger.LogInformation("Financial data: {FinancialData}", financialData);
 
             _processedFiles.TryAdd(
-                fileName, 
+                fileId, 
                 new ProcessedFile(tempPath, _timeProvider.GetUtcNow().UtcDateTime, financialData));
         }
         catch (Exception ex)
@@ -216,6 +188,20 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
         }
     }
 
+    public async IAsyncEnumerable<ProcessedFile> GetAllProcessedFilesAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        foreach (var file in _processedFiles.Values)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await Task.Delay(1, cancellationToken); // Small delay to make it truly async
+            yield return file;
+        }
+    }
+
+    public Task<ProcessedFile?> GetProcessedFileAsync(string id, CancellationToken cancellationToken) => 
+        Task.FromResult(_processedFiles.GetValueOrDefault(id));
+
     public async ValueTask DisposeAsync()
     {
         _cleanupTimer?.Dispose();
@@ -240,16 +226,39 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
         }
         
         _processedFiles.Clear();
+        GC.SuppressFinalize(this);
     }
 
-    public async IAsyncEnumerable<ProcessedFile> GetAllProcessedFilesAsync(
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    private void CleanupExpiredFiles(object? state)
     {
-        foreach (var file in _processedFiles.Values)
+        try
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            await Task.Delay(1, cancellationToken); // Small delay to make it truly async
-            yield return file;
+            DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
+            var expiredFiles = _processedFiles
+                .Where(f => (now - f.Value.ProcessedTime) > _fileExpirationTime)
+                .ToList();
+
+            foreach (var file in expiredFiles)
+            {
+                try
+                {
+                    if (File.Exists(file.Value.FilePath))
+                    {
+                        File.Delete(file.Value.FilePath);
+                        _logger.LogInformation("Deleted expired file: {FilePath}", file.Value.FilePath);
+                    }
+                    _processedFiles.TryRemove(file.Key, out _);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error deleting expired file: {FilePath}", file.Value.FilePath);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during cleanup of expired files");
         }
     }
+    
 } 

@@ -96,7 +96,7 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
 
   // Format date for display
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('en-US', {
+    return new Date(date).toLocaleDateString('da-DK', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -140,94 +140,93 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
             <TableHeader className="bg-muted/50">
               <TableRow>
                 <TableHead className="w-10"></TableHead>
-                <TableHead>
+                <TableHead key="companyId">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleSort('companyId')}
                     className="hover:bg-transparent p-0 h-auto font-medium"
                   >
-                    Company ID
+                    Skrásetingar nr.
                     {sortField === 'companyId' && (
-                      sortDirection === 'asc' ? <SortAsc className="ml-1 h-3 w-3 inline" /> : <SortDesc className="ml-1 h-3 w-3 inline" />
+                      sortDirection === 'asc' ? 
+                        <SortAsc key="asc" className="ml-1 h-3 w-3 inline" /> : 
+                        <SortDesc key="desc" className="ml-1 h-3 w-3 inline" />
                     )}
                   </Button>
                 </TableHead>
-                <TableHead>
+                <TableHead key="companyName">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleSort('companyName')}
                     className="hover:bg-transparent p-0 h-auto font-medium"
                   >
-                    Company Name
+                    Felag
                     {sortField === 'companyName' && (
-                      sortDirection === 'asc' ? <SortAsc className="ml-1 h-3 w-3 inline" /> : <SortDesc className="ml-1 h-3 w-3 inline" />
+                      sortDirection === 'asc' ? 
+                        <SortAsc key="asc" className="ml-1 h-3 w-3 inline" /> : 
+                        <SortDesc key="desc" className="ml-1 h-3 w-3 inline" />
                     )}
                   </Button>
                 </TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort('fileName')}
-                    className="hover:bg-transparent p-0 h-auto font-medium"
-                  >
-                    File Name
-                    {sortField === 'fileName' && (
-                      sortDirection === 'asc' ? <SortAsc className="ml-1 h-3 w-3 inline" /> : <SortDesc className="ml-1 h-3 w-3 inline" />
-                    )}
-                  </Button>
-                </TableHead>
-                <TableHead>
+                <TableHead key="uploadDate">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleSort('uploadDate')}
                     className="hover:bg-transparent p-0 h-auto font-medium"
                   >
-                    Upload Date
+                    Innlisið
                     {sortField === 'uploadDate' && (
-                      sortDirection === 'asc' ? <SortAsc className="ml-1 h-3 w-3 inline" /> : <SortDesc className="ml-1 h-3 w-3 inline" />
+                      sortDirection === 'asc' ? 
+                        <SortAsc key="asc" className="ml-1 h-3 w-3 inline" /> : 
+                        <SortDesc key="desc" className="ml-1 h-3 w-3 inline" />
                     )}
                   </Button>
                 </TableHead>
-                <TableHead>
+                <TableHead key="grossProfit">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleSort('data.GrossProfit')}
                     className="hover:bg-transparent p-0 h-auto font-medium"
                   >
-                    Gross Profit
+                    Bruttovinningur
                     {sortField === 'data.GrossProfit' && (
-                      sortDirection === 'asc' ? <SortAsc className="ml-1 h-3 w-3 inline" /> : <SortDesc className="ml-1 h-3 w-3 inline" />
+                      sortDirection === 'asc' ? 
+                        <SortAsc key="asc" className="ml-1 h-3 w-3 inline" /> : 
+                        <SortDesc key="desc" className="ml-1 h-3 w-3 inline" />
                     )}
                   </Button>
                 </TableHead>
-                <TableHead>
+                <TableHead key="profitAfterTax">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleSort('data.ProfitAfterTax')}
                     className="hover:bg-transparent p-0 h-auto font-medium"
                   >
-                    Profit After Tax
+                    Úrslit eftir skatt
                     {sortField === 'data.ProfitAfterTax' && (
-                      sortDirection === 'asc' ? <SortAsc className="ml-1 h-3 w-3 inline" /> : <SortDesc className="ml-1 h-3 w-3 inline" />
+                      sortDirection === 'asc' ? 
+                        <SortAsc key="asc" className="ml-1 h-3 w-3 inline" /> : 
+                        <SortDesc key="desc" className="ml-1 h-3 w-3 inline" />
                     )}
                   </Button>
                 </TableHead>
-                <TableHead>
+                <TableHead key="totalAssets">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleSort('data.TotalAssets')}
                     className="hover:bg-transparent p-0 h-auto font-medium"
                   >
-                    Total Assets
+                    Ogn íalt
                     {sortField === 'data.TotalAssets' && (
-                      sortDirection === 'asc' ? <SortAsc className="ml-1 h-3 w-3 inline" /> : <SortDesc className="ml-1 h-3 w-3 inline" />
+                      sortDirection === 'asc' ? 
+                        <SortAsc key="asc" className="ml-1 h-3 w-3 inline" /> : 
+                        <SortDesc key="desc" className="ml-1 h-3 w-3 inline" />
                     )}
                   </Button>
                 </TableHead>
@@ -235,9 +234,9 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
             </TableHeader>
             <TableBody>
               {currentItems.length === 0 ? (
-                <TableRow>
+                <TableRow key="empty-row">
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                    No documents found
+                    Ongi skjøl funnin
                   </TableCell>
                 </TableRow>
               ) : (
@@ -258,7 +257,6 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
                     <TableCell>
                       <div className="font-medium">{doc.companyName}</div>
                     </TableCell>
-                    <TableCell>{doc.fileName}</TableCell>
                     <TableCell>{formatDate(doc.uploadDate)}</TableCell>
                     <TableCell>{api.formatCurrency(doc.data?.GrossProfit || 0)}</TableCell>
                     <TableCell>{api.formatCurrency(doc.data?.ProfitAfterTax || 0)}</TableCell>

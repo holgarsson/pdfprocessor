@@ -1,4 +1,3 @@
-
 export interface FinancialStatement {
   GrossProfit: number;
   StaffCosts: number;
@@ -32,6 +31,7 @@ export interface ProcessedDocument {
   uploadDate: Date;
   processedDate: Date;
   data: FinancialStatement;
+  file: File;
 }
 
 export interface ProcessingFile {

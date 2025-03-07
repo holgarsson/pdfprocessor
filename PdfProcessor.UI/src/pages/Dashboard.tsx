@@ -10,30 +10,29 @@ import { api } from '../services/api';
 import { Button } from '@/components/ui/button';
 import { LogOut, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import { v4 as uuidv4 } from 'uuid';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const [processingFiles, setProcessingFiles] = useState<ProcessingFile[]>([]);
   const [documents, setDocuments] = useState<ProcessedDocument[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<ProcessedDocument | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [completedCount, setCompletedCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [viewingDetails, setViewingDetails] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // Load documents from API
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        setIsLoading(true);
-        console.log('Fetching documents...');
+        // Only show loading on initial load
+        if (isInitialLoad) {
+          setIsLoading(true);
+        }
         const data = await api.getDocuments();
-        console.log('API Response:', data);
         if (Array.isArray(data)) {
-          console.log('Setting documents:', data);
           setDocuments(data);
         } else {
-          console.error('Invalid response format:', data);
           toast.error('Invalid response format from server');
         }
       } catch (error) {
@@ -41,42 +40,73 @@ const Dashboard = () => {
         toast.error('Failed to load documents');
       } finally {
         setIsLoading(false);
+        setIsInitialLoad(false);
       }
     };
 
     fetchDocuments();
-  }, []);
+  }, [isInitialLoad]);
 
   // Debug effect to monitor documents state
   useEffect(() => {
     console.log('Documents state updated:', documents);
   }, [documents]);
 
-  const handleFileUpload = (file: ProcessingFile) => {
-    setProcessingFiles(prev => [...prev, file]);
-    setIsProcessing(true);
+  const handleFileUpload = (files: ProcessingFile[]) => {
+    setProcessingFiles(files);
+    setCompletedCount(0);
   };
 
   const handleUploadComplete = (document: ProcessedDocument) => {
     console.log('Upload complete, adding document:', document);
     setDocuments(prev => [document, ...prev]);
-    setProcessingFiles(prev => prev.filter(f => f.id !== document.id));
-    setIsProcessing(false);
-    toast.success(`Processed: ${document.fileName}`);
+    setCompletedCount(prev => {
+      const newCount = prev + 1;
+      // If all files are processed, clear the processing state
+      if (newCount === processingFiles.length) {
+        setTimeout(() => {
+          setProcessingFiles([]);
+          setCompletedCount(0);
+        }, 300);
+      }
+      return newCount;
+    });
   };
 
   const handleUploadError = (error: string) => {
     toast.error(error);
-    setIsProcessing(false);
+    setCompletedCount(prev => {
+      const newCount = prev + 1;
+      // If all files are processed, clear the processing state
+      if (newCount === processingFiles.length) {
+        setTimeout(() => {
+          setProcessingFiles([]);
+          setCompletedCount(0);
+        }, 300);
+      }
+      return newCount;
+    });
   };
 
-  const handleSelectDocument = (document: ProcessedDocument) => {
-    setSelectedDocument(document);
-    setViewingDetails(true);
+  const handleSelectDocument = async (document: ProcessedDocument) => {
+    try {
+        setSelectedDocument(document);
+        setViewingDetails(true);
+    } catch (error) {
+        console.error('Error loading PDF file:', error);
+        toast.error('Failed to load PDF file');
+    }
   };
 
   const handleBackToList = () => {
+    // First set viewingDetails to false
     setViewingDetails(false);
+    // Then clear other states
+    setSelectedDocument(null);
+    setProcessingFiles([]);
+    setCompletedCount(0);
+    // Force a refresh of the documents
+    setIsInitialLoad(true);
   };
 
   return (
@@ -118,7 +148,10 @@ const Dashboard = () => {
               <h2 className="text-lg font-medium">Document Details</h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <DocumentDetails document={selectedDocument} />
-                <PDFViewer fileName={selectedDocument.fileName} />
+                <PDFViewer 
+                  fileName={selectedDocument.fileName} 
+                  documentId={selectedDocument.id}
+                />
               </div>
             </section>
           </div>
@@ -136,7 +169,8 @@ const Dashboard = () => {
             {processingFiles.length > 0 && (
               <section>
                 <ProcessingIndicator 
-                  files={processingFiles} 
+                  files={processingFiles}
+                  completedCount={completedCount}
                   onUploadComplete={handleUploadComplete}
                 />
               </section>
