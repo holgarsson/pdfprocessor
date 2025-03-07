@@ -1,0 +1,150 @@
+{
+  "common": {
+    "loading": "Innlesur...",
+    "error": "Villa",
+    "success": "Væleydnað",
+    "of": "av",
+    "more": "og {count} afturat",
+    "percent": "{value}%",
+    "search": "Leita",
+    "noResults": "Ongi skjøl funnin",
+    "loggedInAs": "Innritaður sum",
+    "logout": "Rita út"
+  },
+  "toast": {
+    "welcome": "Vælkomin, {email}!",
+    "loggedOut": "Útritað/-ur",
+    "invalidResponse": "Ógildugt svar frá servara",
+    "failedToLoad": "Fekk ikki heintað skjøl",
+    "failedToLoadPdf": "Fekk ikki latið upp PDF fílu",
+    "backToList": "Aftur til skjalayvirlit"
+  },
+  "header": {
+    "title": "Føroyskur PDF Roknskapur",
+    "uploadDocuments": "Send inn PDF fílur",
+    "documents": "PDF fílur"
+  },
+  "navigation": {
+    "home": "Heim",
+    "upload": "Send inn",
+    "settings": "Stillingar"
+  },
+  "pdf": {
+    "upload": "Innles PDF",
+    "processing": "Viðger PDF",
+    "processingFiles": "Viðger PDF fílur",
+    "filesProcessed": "fílur viðgjørdar",
+    "dropzone": "Slepp PDF fílum her ella trýst fyri at velja",
+    "dropHere": "Slepp PDF fílum her",
+    "clickToSelect": "Trýst fyri at velja fílur frá telduni",
+    "onlyPdf": "Bert PDF fílur eru loyvdar",
+    "uploadError": "Villa í viðgerð av {fileName}",
+    "overallProgress": "Samlað framgongd"
+  },
+  "settings": {
+    "language": "Mál",
+    "theme": "Útsjónd",
+    "notifications": "Fráboðanir"
+  },
+  "meta": {
+    "title": "Føroyskur PDF Roknskapur",
+    "description": "PDF Roknskapur um til JSON"
+  },
+  "table": {
+    "search": "Leita í skjølum...",
+    "columns": {
+      "registrationNumber": "Skrásetingar Nr.",
+      "company": "Navn",
+      "uploaded": "Sent inn",
+      "grossProfit": "Bruttoúrslit",
+      "profitAfterTax": "Úrslit eftir skatt",
+      "totalAssets": "Ogn í alt"
+    },
+    "pagination": {
+      "page": "Síða {current} av {total}",
+      "first": "Fyrsta",
+      "previous": "Fyrra",
+      "next": "Næsta",
+      "last": "Síðsta"
+    }
+  },
+  "auth": {
+    "login": "Rita inn",
+    "loggingIn": "Ritar inn...",
+    "credentials": "Skriva tínar upplýsingar fyri at fáa atgongd",
+    "username": {
+      "label": "Brúkaranavn",
+      "placeholder": "Skriva títt brúkaranavn"
+    },
+    "password": {
+      "label": "Loyniorð",
+      "placeholder": "Skriva títt loyniorð"
+    },
+    "invalidCredentials": "Skeivt teldupostur ella loyniorð",
+    "invalidRequest": "Ógildugt umbøn",
+    "loginFailed": "Innritan miseydnaðist"
+  },
+  "document": {
+    "title": "Skjalaupplýsingar",
+    "selectDocument": "Vel eitt skjal fyri meira upplýsingar",
+    "uploaded": "Innlisið: {date}",
+    "tabs": {
+      "income": "Rakstur",
+      "balance": "Ogn og Skyldir",
+      "metrics": "Lyklatøl"
+    },
+    "income": {
+      "grossProfit": "Bruttovinningur",
+      "staffCosts": "Starvsfólkakostnaður",
+      "otherOperatingExpenses": "Annar rakstrarkostnaður",
+      "depreciation": "Avskrivingar",
+      "profitBeforeInterest": "Úrslit áðrenn rentur",
+      "financialIncome": "Fíggjarinntøkur",
+      "financialExpenses": "Fíggjarkostnaður",
+      "profitBeforeExtraordinaryItems": "Úrslit áðrenn serligar postar",
+      "extraordinaryItems": "Serligir postar",
+      "profitBeforeTax": "Úrslit áðrenn skatt",
+      "tax": "Skattur",
+      "profitAfterTax": "Úrslit eftir skatt",
+      "annualResult": "Ársúrslit"
+    },
+    "balance": {
+      "assets": "Ogn",
+      "fixedAssets": "Støðisogn",
+      "currentAssets": "Ogn í umferð",
+      "totalAssets": "Ogn íalt",
+      "equityAndLiabilities": "Eginpeningur og skyldur",
+      "equity": "Eginpeningur",
+      "provisions": "Avsetingar",
+      "longTermLiabilities": "Langfreistað skuld",
+      "shortTermLiabilities": "Stuttfreistað skuld",
+      "totalLiabilities": "Skuld íalt"
+    },
+    "metrics": {
+      "profitMargin": {
+        "title": "Vinningsmargin",
+        "value": "{value}%"
+      },
+      "debtToEquity": {
+        "title": "Skuld móti eginpeningi",
+        "value": "{value}"
+      },
+      "returnOnAssets": {
+        "title": "Avkast av ognum",
+        "value": "{value}%"
+      },
+      "currentRatio": {
+        "title": "Gjaldførislutfall",
+        "value": "{value}"
+      },
+      "staffCostRatio": {
+        "title": "Starvsfólkakostnaðarlutfall",
+        "value": "{value}%"
+      },
+      "operatingExpenseRatio": {
+        "title": "Rakstrarkostnaðarlutfall",
+        "value": "{value}%"
+      }
+    }
+  }
+} 

@@ -4,20 +4,90 @@ import { Upload, FileText } from 'lucide-react';
 import { api } from '../services/api';
 import { ProcessingFile } from '../types/document';
 import { v4 as uuidv4 } from 'uuid';
+import { useLocale } from '../context/LocaleContext';
+import { getConfig } from '../config';
 
 interface DropZoneProps {
-  onFileUpload: (files: ProcessingFile[]) => void;
+  onFileUpload: (files: ProcessingFile[], completedCount: number) => void;
   onUploadComplete: (document: any) => void;
   onUploadError: (error: string) => void;
+  onAllFilesComplete?: () => void;
 }
 
 const DropZone: React.FC<DropZoneProps> = ({
   onFileUpload,
   onUploadComplete,
-  onUploadError
+  onUploadError,
+  onAllFilesComplete
 }) => {
+  const { t } = useLocale();
+  
+  const processFile = async (file: File, processingFiles: ProcessingFile[], index: number, totalFiles: number) => {
+    try {
+      // Start processing
+      processingFiles[index].status = 'processing';
+      processingFiles[index].progress = 0;
+      onFileUpload([...processingFiles], index);
+
+      // Upload and process the file
+      const formData = new FormData();
+      formData.append('files', file);
+
+      const response = await fetch(`${getConfig().apiUrl}/api/pdf/process`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed with status ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (!result.results?.[0]?.processedFile?.financialData) {
+        throw new Error('Invalid response format from server');
+      }
+
+      // Mark as complete
+      processingFiles[index].status = 'completed';
+      processingFiles[index].progress = 100;
+      const newCompletedCount = index + 1;
+      console.log(`File ${index + 1}/${totalFiles} completed. New count: ${newCompletedCount}`);
+      onFileUpload([...processingFiles], newCompletedCount);
+      onUploadComplete(result.results[0].processedFile);
+
+      // Check if this was the last file
+      if (newCompletedCount === totalFiles) {
+        console.log('All files completed, triggering completion callback');
+        onAllFilesComplete?.();
+      }
+
+    } catch (error) {
+      console.error('Processing error:', error);
+      processingFiles[index].status = 'error';
+      processingFiles[index].error = t('pdf.uploadError', { fileName: file.name });
+      onUploadError(t('pdf.uploadError', { fileName: file.name }));
+      
+      // Still increment completedCount even on error
+      const newCompletedCount = index + 1;
+      onFileUpload([...processingFiles], newCompletedCount);
+      
+      // Check if this was the last file, even if it errored
+      if (newCompletedCount === totalFiles) {
+        console.log('All files completed (with errors), triggering completion callback');
+        onAllFilesComplete?.();
+      }
+    }
+  };
+  
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    // Create processing files state for all files at once
+    if (acceptedFiles.length === 0) return;
+
+    console.log(`Starting to process ${acceptedFiles.length} files`);
+
+    // Create processing files state for all files
     const processingFiles = acceptedFiles.map(file => ({
       id: uuidv4(),
       file,
@@ -25,35 +95,21 @@ const DropZone: React.FC<DropZoneProps> = ({
       status: 'queued' as const
     })) as ProcessingFile[];
 
-    // Notify parent about all files at once
-    onFileUpload(processingFiles);
+    // Initial state
+    onFileUpload([...processingFiles], 0);
 
     // Process files sequentially
     for (let i = 0; i < acceptedFiles.length; i++) {
-      const file = acceptedFiles[i];
-      try {
-        // Update status to processing for current file
-        processingFiles[i].status = 'processing' as const;
-        
-        const document = await api.uploadDocument(file);
-        processingFiles[i].status = 'completed';
-        onUploadComplete(document);
-      } catch (error) {
-        console.error('Upload error:', error);
-        processingFiles[i].status = 'error';
-        processingFiles[i].error = `Failed to upload ${file.name}. Please try again.`;
-        onUploadError(`Failed to upload ${file.name}. Please try again.`);
-        // Continue with next file even if one fails
-      }
+      await processFile(acceptedFiles[i], processingFiles, i, acceptedFiles.length);
     }
-  }, [onFileUpload, onUploadComplete, onUploadError]);
+  }, [onFileUpload, onUploadComplete, onUploadError, onAllFilesComplete, t]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'application/pdf': ['.pdf']
     },
-    multiple: true // Enable multiple file selection
+    multiple: true
   });
 
   return (
@@ -75,15 +131,15 @@ const DropZone: React.FC<DropZoneProps> = ({
         </div>
         <div className="space-y-1">
           <p className="text-lg font-medium">
-            {isDragActive ? 'Drop the PDF files here' : 'Drag & drop PDF files here'}
+            {isDragActive ? t('pdf.dropHere') : t('pdf.dropzone')}
           </p>
           <p className="text-sm text-muted-foreground">
-            or click to select files
+            {t('pdf.clickToSelect')}
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <FileText className="h-4 w-4" />
-          <span>PDF files only</span>
+          <span>{t('pdf.onlyPdf')}</span>
         </div>
       </div>
     </div>

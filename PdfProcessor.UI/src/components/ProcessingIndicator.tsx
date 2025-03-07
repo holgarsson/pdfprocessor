@@ -1,72 +1,68 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Loader2 } from 'lucide-react';
 import { ProcessingFile, ProcessedDocument } from '../types/document';
+import { useLocale } from '../context/LocaleContext';
 
 interface ProcessingIndicatorProps {
   files: ProcessingFile[];
   completedCount: number;
-  onUploadComplete?: (document: ProcessedDocument) => void;
+  onComplete?: () => void;
 }
 
-const ProcessingIndicator: React.FC<ProcessingIndicatorProps> = ({ files, completedCount, onUploadComplete }) => {
-  const [progress, setProgress] = useState(0);
-  const initialized = useRef(false);
+const ProcessingIndicator: React.FC<ProcessingIndicatorProps> = ({ 
+  files, 
+  completedCount,
+  onComplete 
+}) => {
+  const { t } = useLocale();
+  const isComplete = files.length > 0 && completedCount >= files.length;
 
   useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
+    console.log(`ProcessingIndicator state: files=${files.length}, completed=${completedCount}, isComplete=${isComplete}`);
+    if (isComplete && onComplete) {
+      console.log('Triggering onComplete callback');
+      onComplete();
+    }
+  }, [files.length, completedCount, isComplete, onComplete]);
 
-    let currentProgress = 0;
-    const interval = setInterval(() => {
-      // Progress speed is inversely proportional to number of files
-      const increment = (Math.random() * 2) / files.length;
-      currentProgress += increment;
-      
-      // Simulate processing complete at random point between 80-95%
-      if (currentProgress >= 80 + Math.random() * 15) {
-        clearInterval(interval);
-        currentProgress = 100;
-        setProgress(100);
-        
-        // Remove the progress indicator after a short delay
-        setTimeout(() => {
-          setProgress(0);
-        }, 300);
-      } else {
-        setProgress(currentProgress);
-      }
-    }, 50);
+  // Hide the component if there are no files or all files are complete
+  if (files.length === 0 || completedCount >= files.length) {
+    console.log('ProcessingIndicator hiding due to completion');
+    return null;
+  }
 
-    return () => {
-      clearInterval(interval);
-    };
-  }, [files]);
-
-  if (progress === 0) return null;
-
+  // Calculate overall progress based on current file's progress
+  const currentFileIndex = Math.min(completedCount, files.length - 1);
+  const currentFileProgress = files[currentFileIndex]?.progress || 0;
+  const totalProgress = Math.min(((completedCount * 100) + currentFileProgress) / files.length, 100);
+  
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">Processing PDF Files</h2>
+        <h2 className="text-lg font-medium">{t('pdf.processingFiles')}</h2>
         <div className="text-primary animate-spin">
           <Loader2 size={20} />
         </div>
       </div>
+      
       <div className="text-sm text-muted-foreground">
-        {completedCount} of {files.length} files processed
+        {Math.min(completedCount + 1, files.length)} {t('common.of')} {files.length} {t('pdf.filesProcessed')}
       </div>
+
+      {/* Single progress bar for all files */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <div className="text-sm">
-            {files[completedCount]?.file.name}
-            {files.length - completedCount > 1 ? ` and ${files.length - completedCount - 1} more` : ''}
+          <div className="text-sm truncate flex-1 mr-4">
+            {files[currentFileIndex]?.file.name || ''}
           </div>
-          <div className="text-sm text-muted-foreground">{Math.round(progress)}%</div>
+          <div className="text-sm text-muted-foreground whitespace-nowrap">
+            {Math.round(totalProgress)}%
+          </div>
         </div>
         <Progress 
-          value={progress} 
-          className="h-1 bg-gray-100" 
+          value={totalProgress} 
+          className="h-2 bg-gray-100" 
         />
       </div>
     </div>

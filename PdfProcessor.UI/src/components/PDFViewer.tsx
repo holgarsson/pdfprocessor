@@ -7,11 +7,11 @@ import { FileText, ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from 'lucide-rea
 import { Button } from '@/components/ui/button';
 
 interface PDFViewerProps {
-  fileName: string;
+  filePath: string;
   documentId: string;
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ fileName, documentId }) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({ filePath, documentId }) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);

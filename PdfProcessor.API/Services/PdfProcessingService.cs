@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace PdfProcessor.API.Services;
 
-public record ProcessedFile(string FilePath, DateTime ProcessedTime = default, FinancialData? FinancialData = null);
+public record ProcessedFile(string Id, string FileName,string FilePath, DateTime ProcessedTime = default, FinancialData? FinancialData = null);
 
 public record ProcessingResult
 {
@@ -151,7 +151,7 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
 
             _processedFiles.TryAdd(
                 fileId, 
-                new ProcessedFile(tempPath, _timeProvider.GetUtcNow().UtcDateTime, financialData));
+                new ProcessedFile(fileId, file.FileName, tempPath, _timeProvider.GetUtcNow().UtcDateTime, financialData));
         }
         catch (Exception ex)
         {

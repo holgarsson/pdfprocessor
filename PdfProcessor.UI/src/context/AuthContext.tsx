@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types/document';
 import { toast } from "sonner";
-import { getConfig } from '../config';
+import { api } from '../services/api';
+import { useLocale } from './LocaleContext';
 
 interface AuthContextType {
   user: User | null;
@@ -23,68 +24,55 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { t } = useLocale();
 
   // Check for existing session on mount
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
-    const storedToken = localStorage.getItem('authToken');
-    
-    if (storedUser && storedToken) {
+    if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
       } catch (error) {
         console.error('Failed to parse stored user:', error);
         localStorage.removeItem('user');
-        localStorage.removeItem('authToken');
       }
     }
     setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
     try {
-      const response = await fetch(`${getConfig().apiUrl}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      console.log('Login response status:', response.status);
+      setIsLoading(true);
+      const response = await api.login(email, password);
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        console.error('Login error response:', errorData);
-        
         if (response.status === 401) {
-          throw new Error('Invalid email or password');
+          toast.error(t('auth.invalidCredentials'));
+          return;
         }
         if (response.status === 400) {
-          throw new Error(errorData?.message || 'Invalid request');
+          toast.error(t('auth.invalidRequest'));
+          return;
         }
-        throw new Error(errorData?.message || `Login failed with status ${response.status}`);
+        toast.error(t('auth.loginFailed'));
+        return;
       }
 
       const data = await response.json();
-      console.log('Login successful, received data:', data);
-      
-      const { user: userData, token } = data;
-
-      if (!userData || !token) {
-        throw new Error('Invalid response from server');
+      if (!data.token) {
+        toast.error(t('toast.invalidResponse'));
+        return;
       }
 
+      const userData = { email, token: data.token };
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('authToken', token);
-      
-      toast.success(`Welcome, ${userData.email}!`);
+      localStorage.setItem('authToken', data.token);
+      toast.success(t('toast.welcome', { email }));
     } catch (error) {
       console.error('Login error:', error);
-      toast.error(error instanceof Error ? error.message : 'Login failed');
-      throw error;
+      toast.error(t('auth.loginFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     localStorage.removeItem('user');
     localStorage.removeItem('authToken');
-    toast.info("Logged out successfully");
+    toast.success(t('toast.loggedOut'));
   };
 
   return (

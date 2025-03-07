@@ -21,6 +21,19 @@ const getAuthHeaders = () => {
 };
 
 export const api = {
+  // Auth methods
+  async login(email: string, password: string): Promise<Response> {
+    const response = await fetch(`${getApiBaseUrl()}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    
+    return response;
+  },
+
   // Get all processed documents
   async getDocuments(): Promise<ProcessedDocument[]> {
     const response = await fetch(`${getApiBaseUrl()}/pdf/processed`, {

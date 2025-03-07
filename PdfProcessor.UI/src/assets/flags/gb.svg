@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="400" viewBox="0 0 800 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Blue background -->
+  <rect width="800" height="400" fill="#012169"/>
+  <!-- White diagonals -->
+  <path d="M0 0L800 400M800 0L0 400" stroke="white" stroke-width="80"/>
+  <!-- Red diagonals -->
+  <path d="M0 0L800 400M800 0L0 400" stroke="#C8102E" stroke-width="40"/>
+  <!-- White cross -->
+  <rect x="350" y="0" width="100" height="400" fill="white"/>
+  <rect x="0" y="150" width="800" height="100" fill="white"/>
+  <!-- Red cross -->
+  <rect x="375" y="0" width="50" height="400" fill="#C8102E"/>
+  <rect x="0" y="175" width="800" height="50" fill="#C8102E"/>
+</svg> 

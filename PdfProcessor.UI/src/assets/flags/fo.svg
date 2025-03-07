@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="580" viewBox="0 0 800 580" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- White background -->
+  <rect width="800" height="580" fill="white"/>
+  <!-- Blue cross -->
+  <rect x="0" y="240" width="800" height="100" fill="#0065BF"/>
+  <rect x="220" y="0" width="100" height="580" fill="#0065BF"/>
+  <!-- Red cross -->
+  <rect x="0" y="260" width="800" height="60" fill="#ED2939"/>
+  <rect x="240" y="0" width="60" height="580" fill="#ED2939"/>
+</svg> 

@@ -1,3 +1,4 @@
 {
-  "apiUrl": "https://pdfprocessor-cghqfabefhakc9hv.swedencentral-01.azurewebsites.net"
+  //"apiUrl": "https://pdfprocessor-cghqfabefhakc9hv.swedencentral-01.azurewebsites.net"
+  "apiUrl": "https://localhost:5001"
 } 

@@ -1,37 +1,35 @@
-export interface FinancialStatement {
-  GrossProfit: number;
-  StaffCosts: number;
-  OtherOperatingExpenses: number;
-  Depreciation: number;
-  ProfitBeforeInterest: number;
-  FinancialIncome: number;
-  FinancialExpenses: number;
-  ProfitBeforeExtraordinaryItems: number;
-  ExtraordinaryItems: number;
-  ProfitBeforeTax: number;
-  Tax: number;
-  ProfitAfterTax: number;
-  AnnualResult: number;
-  FixedAssets: number;
-  CurrentAssets: number;
-  TotalAssets: number;
-  Equity: number;
-  Provisions: number;
-  LongTermLiabilities: number;
-  ShortTermLiabilities: number;
-  TotalLiabilities: number;
-  EquityAndLiabilities: number;
+export interface FinancialData {
+  companyId: number;
+  companyName: string;
+  grossProfit: number | null;
+  staffCosts: number | null;
+  otherOperatingExpenses: number | null;
+  depreciation: number | null;
+  profitBeforeInterest: number | null;
+  financialIncome: number | null;
+  financialExpenses: number | null;
+  profitBeforeExtraordinaryItems: number | null;
+  extraordinaryItems: number | null;
+  profitBeforeTax: number | null;
+  tax: number | null;
+  profitAfterTax: number | null;
+  annualResult: number | null;
+  fixedAssets: number | null;
+  currentAssets: number | null;
+  totalAssets: number | null;
+  equity: number | null;
+  provisions: number | null;
+  longTermLiabilities: number | null;
+  shortTermLiabilities: number | null;
+  totalLiabilities: number | null;
+  equityAndLiabilities: number | null;
 }
 
 export interface ProcessedDocument {
   id: string;
-  companyId: string;
-  companyName: string;
-  fileName: string;
-  uploadDate: Date;
-  processedDate: Date;
-  data: FinancialStatement;
-  file: File;
+  filePath: string;
+  processedTime: string;
+  financialData: FinancialData;
 }
 
 export interface ProcessingFile {

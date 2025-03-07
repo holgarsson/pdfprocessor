@@ -1,0 +1,150 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "of": "of",
+    "more": "and {count} more",
+    "percent": "{value}%",
+    "search": "Search",
+    "noResults": "No documents found",
+    "loggedInAs": "Logged in as",
+    "logout": "Logout"
+  },
+  "toast": {
+    "welcome": "Welcome, {email}!",
+    "loggedOut": "Logged out successfully",
+    "invalidResponse": "Invalid response format from server",
+    "failedToLoad": "Failed to load documents",
+    "failedToLoadPdf": "Failed to load PDF file",
+    "backToList": "Back to document list"
+  },
+  "header": {
+    "title": "Financial Document Processor",
+    "uploadDocuments": "Upload Documents",
+    "documents": "Documents"
+  },
+  "navigation": {
+    "home": "Home",
+    "upload": "Upload",
+    "settings": "Settings"
+  },
+  "pdf": {
+    "upload": "Upload PDF",
+    "processing": "Processing PDF",
+    "processingFiles": "Processing PDF Files",
+    "filesProcessed": "files processed",
+    "dropzone": "Drop PDF files here or click to select",
+    "dropHere": "Drop PDF files here",
+    "clickToSelect": "Click to select files from your computer",
+    "onlyPdf": "Only PDF files are supported",
+    "uploadError": "Error processing {fileName}",
+    "overallProgress": "Overall Progress"
+  },
+  "settings": {
+    "language": "Language",
+    "theme": "Theme",
+    "notifications": "Notifications"
+  },
+  "meta": {
+    "title": "PDF Roknskapur",
+    "description": "PDF Processing Application"
+  },
+  "table": {
+    "search": "Search documents...",
+    "columns": {
+      "registrationNumber": "Registration No.",
+      "company": "Company",
+      "uploaded": "Uploaded",
+      "grossProfit": "Gross Profit",
+      "profitAfterTax": "Profit After Tax",
+      "totalAssets": "Total Assets"
+    },
+    "pagination": {
+      "page": "Page {current} of {total}",
+      "first": "First",
+      "previous": "Previous",
+      "next": "Next",
+      "last": "Last"
+    }
+  },
+  "auth": {
+    "login": "Login",
+    "loggingIn": "Logging in...",
+    "credentials": "Enter your credentials to access your account",
+    "username": {
+      "label": "Username",
+      "placeholder": "Enter your username"
+    },
+    "password": {
+      "label": "Password",
+      "placeholder": "Enter your password"
+    },
+    "invalidCredentials": "Invalid email or password",
+    "invalidRequest": "Invalid request",
+    "loginFailed": "Login failed"
+  },
+  "document": {
+    "title": "Document Details",
+    "selectDocument": "Select a document for more information",
+    "uploaded": "Uploaded: {date}",
+    "tabs": {
+      "income": "Income",
+      "balance": "Balance",
+      "metrics": "Metrics"
+    },
+    "income": {
+      "grossProfit": "Gross Profit",
+      "staffCosts": "Staff Costs",
+      "otherOperatingExpenses": "Other Operating Expenses",
+      "depreciation": "Depreciation",
+      "profitBeforeInterest": "Profit Before Interest",
+      "financialIncome": "Financial Income",
+      "financialExpenses": "Financial Expenses",
+      "profitBeforeExtraordinaryItems": "Profit Before Extraordinary Items",
+      "extraordinaryItems": "Extraordinary Items",
+      "profitBeforeTax": "Profit Before Tax",
+      "tax": "Tax",
+      "profitAfterTax": "Profit After Tax",
+      "annualResult": "Annual Result"
+    },
+    "balance": {
+      "assets": "Assets",
+      "fixedAssets": "Fixed Assets",
+      "currentAssets": "Current Assets",
+      "totalAssets": "Total Assets",
+      "equityAndLiabilities": "Equity and Liabilities",
+      "equity": "Equity",
+      "provisions": "Provisions",
+      "longTermLiabilities": "Long Term Liabilities",
+      "shortTermLiabilities": "Short Term Liabilities",
+      "totalLiabilities": "Total Liabilities"
+    },
+    "metrics": {
+      "profitMargin": {
+        "title": "Profit Margin",
+        "value": "{value}%"
+      },
+      "debtToEquity": {
+        "title": "Debt-to-Equity Ratio",
+        "value": "{value}"
+      },
+      "returnOnAssets": {
+        "title": "Return on Assets",
+        "value": "{value}%"
+      },
+      "currentRatio": {
+        "title": "Current Ratio",
+        "value": "{value}"
+      },
+      "staffCostRatio": {
+        "title": "Staff Cost Ratio",
+        "value": "{value}%"
+      },
+      "operatingExpenseRatio": {
+        "title": "Operating Expense Ratio",
+        "value": "{value}%"
+      }
+    }
+  }
+} 
