@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types/document';
 import { toast } from "sonner";
-import { config } from '../config';
+import { getConfig } from '../config';
 
 interface AuthContextType {
   user: User | null;
@@ -44,13 +44,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const loginUrl = `${config.apiUrl}/api/auth/login`;
-      console.log('Attempting login to:', loginUrl);
-      const response = await fetch(loginUrl, {
+      const response = await fetch(`${getConfig().apiUrl}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
         },
         body: JSON.stringify({ email, password }),
       });

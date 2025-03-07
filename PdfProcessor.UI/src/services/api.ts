@@ -1,7 +1,7 @@
 import { ProcessedDocument } from '../types';
-import { config } from '../config';
+import { getConfig } from '../config';
 
-const API_BASE_URL = `${config.apiUrl}/api`;
+const getApiBaseUrl = () => `${getConfig().apiUrl}/api`;
 
 // Cache to store uploaded files
 const fileCache = new Map<string, File>();
@@ -23,7 +23,7 @@ const getAuthHeaders = () => {
 export const api = {
   // Get all processed documents
   async getDocuments(): Promise<ProcessedDocument[]> {
-    const response = await fetch(`${API_BASE_URL}/pdf/processed`, {
+    const response = await fetch(`${getApiBaseUrl()}/pdf/processed`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
       }
@@ -79,7 +79,7 @@ export const api = {
 
   // Get a single document by ID
   async getDocument(id: string): Promise<ProcessedDocument> {
-    const response = await fetch(`${API_BASE_URL}/pdf/processed/${id}`, {
+    const response = await fetch(`${getApiBaseUrl()}/pdf/processed/${id}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
       }
@@ -130,7 +130,7 @@ export const api = {
     const formData = new FormData();
     formData.append('files', file);
 
-    const response = await fetch(`${API_BASE_URL}/pdf/process`, {
+    const response = await fetch(`${getApiBaseUrl()}/pdf/process`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${getAuthToken()}`
@@ -196,7 +196,7 @@ export const api = {
 
   // Get document processing status
   async getProcessingStatus(id: string): Promise<{ status: string; progress: number }> {
-    const response = await fetch(`${API_BASE_URL}/pdf/status/${id}`, {
+    const response = await fetch(`${getApiBaseUrl()}/pdf/status/${id}`, {
       headers: getAuthHeaders()
     });
     if (!response.ok) {
@@ -218,7 +218,7 @@ export const api = {
   },
 
   async getPdfFile(id: string): Promise<Blob> {
-    const response = await fetch(`${API_BASE_URL}/pdf/file/${id}`, {
+    const response = await fetch(`${getApiBaseUrl()}/pdf/file/${id}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
       }

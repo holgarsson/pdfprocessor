@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
-import { config } from '../config';
+import { getConfig } from '../config';
 import { FileText, ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -28,7 +28,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ fileName, documentId }) => {
     <div className="w-full h-full flex flex-col">
       <div className="flex-1 overflow-auto flex items-center justify-center bg-muted/30 rounded-lg p-4">
         <Document
-          file={`${config.apiUrl}/api/pdf/file/${documentId}`}
+          file={`${getConfig().apiUrl}/api/pdf/file/${documentId}`}
           onLoadSuccess={onDocumentLoadSuccess}
           onLoadError={(error) => {
             console.error('Error loading PDF:', error);
