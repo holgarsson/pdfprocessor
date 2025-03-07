@@ -80,5 +80,17 @@ public static class PdfEndpoints
         .WithSummary("Get PDF file")
         .WithDescription("Retrieves a specific PDF file by its ID")
         .WithTags("PDF Processing");
+
+        pdfGroup.MapDelete("/clear", async (
+            IPdfProcessingService pdfProcessingService,
+            CancellationToken cancellationToken) =>
+        {
+            await pdfProcessingService.ClearProcessedFilesAsync(cancellationToken);
+            return Results.Ok(new { message = "All processed files have been cleared" });
+        })
+        .WithName("ClearProcessedFiles")
+        .WithSummary("Clear all processed files")
+        .WithDescription("Deletes all processed files and clears the processing list")
+        .WithTags("PDF Processing");
     }
 } 

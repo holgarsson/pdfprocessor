@@ -20,6 +20,7 @@ public interface IPdfProcessingService
 {
     Task<IReadOnlyList<ProcessingResult>> ProcessPdfFilesAsync(IFormFileCollection files, CancellationToken cancellationToken = default);
     Task ProcessPdfFileAsync(IFormFile file, string fileName, CancellationToken cancellationToken = default);
+    Task ClearProcessedFilesAsync(CancellationToken cancellationToken = default);
     IAsyncEnumerable<ProcessedFile> GetAllProcessedFilesAsync(CancellationToken cancellationToken = default);
     Task<ProcessedFile?> GetProcessedFileAsync(string id, CancellationToken cancellationToken);
 }
@@ -186,6 +187,27 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
             readStream?.Dispose();
             memoryStream?.Dispose();
         }
+    }
+
+    public async Task ClearProcessedFilesAsync(CancellationToken cancellationToken = default)
+    {
+        foreach (var file in _processedFiles.Values)
+        {
+            try
+            {
+                if (File.Exists(file.FilePath))
+                {
+                    await Task.Run(() => File.Delete(file.FilePath), cancellationToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting file during clear operation: {FilePath}", file.FilePath);
+            }
+        }
+        
+        _processedFiles.Clear();
+        _logger.LogInformation("Cleared all processed files");
     }
 
     public async IAsyncEnumerable<ProcessedFile> GetAllProcessedFilesAsync(
