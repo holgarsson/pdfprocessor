@@ -30,11 +30,22 @@ jobs:
           
       - name: Install Dependencies
         working-directory: PdfProcessor.UI
-        run: npm install
-        
+        run: |
+          npm install
+          npm install vite-plugin-compression --save-dev
+          
       - name: Build UI
         working-directory: PdfProcessor.UI
-        run: npm run build
+        env:
+          NODE_ENV: production
+        run: |
+          npm run build
+          
+      - name: Optimize Build
+        working-directory: PdfProcessor.UI
+        run: |
+          npm install -g brotli-cli
+          find dist -type f -regex '.*\.\(js\|css\|html\|svg\)$' -exec brotli -f {} \;
           
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client

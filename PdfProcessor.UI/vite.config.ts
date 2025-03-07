@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import compression from 'vite-plugin-compression';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -16,7 +17,15 @@ export default defineConfig({
       }
     }
   },
-  plugins: [react()],
+  plugins: [
+    react(),
+    compression({
+      algorithm: 'brotliCompress',
+      ext: '.br',
+      threshold: 512,
+      deleteOriginFile: false
+    })
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -30,7 +39,15 @@ export default defineConfig({
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
-          'pdf-vendor': ['pdfjs-dist', 'react-pdf']
+          'pdf-vendor': ['pdfjs-dist', 'react-pdf'],
+          'ui-vendor': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-label',
+            '@radix-ui/react-slot',
+            '@radix-ui/react-toast',
+            'lucide-react'
+          ]
         }
       }
     },
@@ -38,6 +55,14 @@ export default defineConfig({
     copyPublicDir: true,
     modulePreload: {
       polyfill: true
-    }
+    },
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      }
+    },
+    chunkSizeWarningLimit: 1000
   },
 });
