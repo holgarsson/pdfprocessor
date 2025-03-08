@@ -1,11 +1,19 @@
-﻿### **Goal**
-Extract specific **financial information** from raw **OCR text** (PDF reports) and return a structured JSON output.
+﻿## **Goal**
+From raw OCR text (PDF financial reports), extract specific **financial information** and return the data as a structured JSON object.
 
 ---
 
 ## **1. Field Identification & Extraction**
-Extract **numeric values** corresponding to the following fields.  
-**Use synonyms only for matching purposes**—do **not** include them in the output.
+
+### **A. Fields & Synonyms**
+Identify and extract **numeric values** for the fields listed below. You may rely on **exact matches** for the field name or any **synonyms** for that field. The **table** provides:
+
+- The **Field Name** you want to find in the OCR text (e.g., “Skrás. nr.”).  
+- Possible **Synonyms** that also map to that field name (e.g., "Skrá nr.," "Skrásetingar nummar").  
+- The **JSON Output Key** to use in the final structured output (e.g., `"companyId"`).
+
+> **Important**: Use synonyms **only** for matching. Do **not** include them in the output.
+
 
 | **Field Name**               | **Synonyms for Matching**                                      | **Output Key**                  |
 |-----------------------------|----------------------------------------------------------------|---------------------------------|
@@ -37,31 +45,38 @@ Extract **numeric values** corresponding to the following fields.
 ---
 
 ## **2. Extraction Rules**
+
+
 ### **A. Parse & Extract**
-- Locate the required **numeric values** from the OCR text using **exact matches** or **synonyms**.
-- Extract numbers **exactly as they appear**, preserving **decimals, commas, and symbols**.
-- If multiple columns exist for the **same year**, select the **latest (rightmost) column**.
-- **totalAssets** must **always** match **equityAndLiabilities** OR **totalLiabilities**.
+1. In the OCR text, locate lines or labels matching **any** of the above **Field Names** or their **Synonyms**.  
+2. For each matching label, extract the corresponding **numeric value**—preserving decimals, commas, and symbols exactly as seen.  
+3. If the same field appears in multiple columns for the **same year**, use the **rightmost (latest) column** value.
 
-### **B. Normalize Values**
-- If amounts are not **explicitly stated in thousands** (e.g., "in 1.000", "tkr", "t.kr."), **divide all values by 1000**.
-  - Example: `33.014.590` → `33.015` (rounded).
-  - Example: `333,123.22` → `333.123` (rounded).
+### **B. Consistency Requirement for `totalAssets`**
+- **`totalAssets`** must always match **`equityAndLiabilities`** OR **`totalLiabilities`**.  
+  - This implies: `totalAssets` == `equityAndLiabilities` or `totalAssets` == `equity + totalLiabilities + provisions` (depending on how the OCR text is structured).
 
-### **C. Handle Missing Data**
-- If a required field is **missing** or **unclear**, return an **empty string** ("").
+### **C. Thousands Normalization**
+- If the amounts are explicitly stated **in thousands** (e.g., "in 1.000," "tkr," "t.kr."), **do not** convert.  
+- Otherwise, **divide every extracted value by 1000**, then round to the nearest unit.  
+  - **Example**: `33.014.590` → `33.015` (after rounding).  
+  - **Example**: `333,123.22` → `333.123` (after rounding).
 
-### **D. Ignore Irrelevant Data**
-- Ignore any **extraneous** text, metadata, or non-financial information.
+### **D. Missing or Unclear Data**
+- If a required field is completely missing or cannot be determined from context, return an **empty string** (`""`) for that field.
 
-### **E. Output Constraints**
-- **Output strictly valid JSON**
-- Do **not include synonyms** in the output—use only the defined JSON field names.
+### **E. Ignore Irrelevant Data**
+- Disregard non-financial items, headings, metadata, or any other text not related to the fields defined above.
+
+### **F. Output Valid JSON Only**
+- Return strictly valid JSON.  
+- **Do not** include synonyms or extraneous information in the output—**only** the defined JSON keys.
 
 ---
 
 ## **3. JSON Output Format**
-Return extracted values in the following **structured JSON** format:
+
+Your final output should be a single JSON object containing **all** the fields below. Replace `<value>` with the extracted data or `""` if not found.
 
 ```json
 {
@@ -94,3 +109,13 @@ Return extracted values in the following **structured JSON** format:
   "equityAndLiabilities": <equityAndLiabilities>
 }
 ```
+
+**Note: <grossProfit>, <staffCosts>, etc. should be numeric when possible. If no value is found, output "" (an empty string).**
+
+### Quick Reference Checklist
+1. **Match** fields via **exact** or **synonym** labels.
+2. **Extract** numeric values exactly as found, and take the **rightmost** column if multiple appear for the same year.
+3. Apply **thousands normalization** unless the text explicitly states amounts are already in thousands.
+4. Ensure `totalAssets` aligns with `equityAndLiabilities` or `totalLiabilities`.
+5. Fill in missing fields with "".
+6. Output a **valid JSON** object with **no extra** properties or synonyms.

@@ -31,6 +31,7 @@ public class GeminiService : IGeminiService
 
         string path = Path.Combine(Directory.GetCurrentDirectory(), "Services", "LLMIntegration", "SystemInstructions.txt");
         string systemInstructions = await File.ReadAllTextAsync(path);
+        Console.WriteLine(systemInstructions);
         if (string.IsNullOrWhiteSpace(systemInstructions))
         {
             throw new Exception("System instructions not found.");

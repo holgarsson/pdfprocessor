@@ -1,7 +1,6 @@
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, FileText } from 'lucide-react';
-import { api } from '../services/api';
 import { ProcessingFile } from '../types/document';
 import { v4 as uuidv4 } from 'uuid';
 import { useLocale } from '../context/LocaleContext';
