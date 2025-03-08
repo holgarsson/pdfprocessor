@@ -61,7 +61,7 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
             .Where(file => file.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase))
             .Select(async file =>
             {
-                string fileId = Guid.NewGuid().ToString();
+                string fileId = Path.GetRandomFileName();
                 try
                 {
                     await semaphore.WaitAsync(cancellationToken);

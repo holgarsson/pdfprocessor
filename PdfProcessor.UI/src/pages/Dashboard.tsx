@@ -94,6 +94,10 @@ const Dashboard = () => {
     setSelectedDocument(null);
   };
 
+  const handleDocumentsCleared = () => {
+    setDocuments([]);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b bg-background sticky top-0 z-10">
@@ -179,6 +183,7 @@ const Dashboard = () => {
                 selectedDocument={selectedDocument}
                 documents={documents}
                 isLoading={isLoading && !processingFiles.length}
+                onDocumentsCleared={handleDocumentsCleared}
               />
             </section>
           </div>

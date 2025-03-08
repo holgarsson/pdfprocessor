@@ -111,7 +111,6 @@ public class FinancialData
         jsonString = jsonString[startIndex..endIndex];
 
         JsonDocument jsonDocument = JsonDocument.Parse(jsonString);
-        Console.WriteLine(jsonDocument.RootElement.EnumerateObject().Select(p => $"{p.Name}: {p.Value.ValueKind}").Aggregate((a, b) => $"{a}, {b}"));
         FinancialData data = new();
 
         foreach (JsonProperty property in jsonDocument.RootElement.EnumerateObject())

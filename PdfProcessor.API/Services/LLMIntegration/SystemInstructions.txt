@@ -1,6 +1,4 @@
-﻿## **Optimized System Instructions for Extracting Financial Data from OCR**
-
-### **Goal**
+﻿### **Goal**
 Extract specific **financial information** from raw **OCR text** (PDF reports) and return a structured JSON output.
 
 ---
@@ -40,25 +38,25 @@ Extract **numeric values** corresponding to the following fields.
 
 ## **2. Extraction Rules**
 ### **A. Parse & Extract**
-- Always select the column year with the **latest year**. If there is ambiguity, such as "Móðurfelag" and "Konsern", always select "Móðurfelag".
 - Locate the required **numeric values** from the OCR text using **exact matches** or **synonyms**.
 - Extract numbers **exactly as they appear**, preserving **decimals, commas, and symbols**.
+- If multiple columns exist for the **same year**, select the **latest (rightmost) column**.
+- **totalAssets** must **always** match **equityAndLiabilities** OR **totalLiabilities**.
 
 ### **B. Normalize Values**
-- **Divide all extracted amounts by 1,000**.
+- If amounts are not **explicitly stated in thousands** (e.g., "in 1.000", "tkr", "t.kr."), **divide all values by 1000**.
   - Example: `33.014.590` → `33.015` (rounded).
   - Example: `333,123.22` → `333.123` (rounded).
 
 ### **C. Handle Missing Data**
-- If a field is **missing or unclear**, return `"N/A"`.
+- If a required field is **missing** or **unclear**, return an **empty string** ("").
 
 ### **D. Ignore Irrelevant Data**
 - Ignore any **extraneous** text, metadata, or non-financial information.
 
 ### **E. Output Constraints**
-- **Strict JSON format**, **no extra commentary**.
-- **No synonyms in the final output**, only use standardized field names.
-
+- **Output strictly valid JSON**
+- Do **not include synonyms** in the output—use only the defined JSON field names.
 
 ---
 

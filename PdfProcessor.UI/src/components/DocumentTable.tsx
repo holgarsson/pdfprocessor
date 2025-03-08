@@ -3,33 +3,38 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ProcessedDocument } from '../types/document';
-import { SearchIcon, SortAsc, SortDesc, Check, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
-import { api } from '../services/api';
+import { SearchIcon, SortAsc, SortDesc, Check, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download } from 'lucide-react';
 import { useLocale } from '../context/LocaleContext';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency } from '../utils';
 import { format } from 'date-fns';
+import { toast } from "sonner";
+import { getConfig } from '../config';
 
 interface DocumentTableProps {
-  onSelectDocument: (document: ProcessedDocument) => void;
+  onSelectDocument: (document: ProcessedDocument | null) => void;
   selectedDocument: ProcessedDocument | null;
   documents: ProcessedDocument[];
   isLoading?: boolean;
+  onDocumentsCleared?: () => void;
 }
 
-type SortField = 'companyId' | 'companyName' | 'processedTime' | 'grossProfit' | 'profitAfterTax' | 'totalAssets';
+type SortField = 'companyId' | 'companyName' | 'annualResult' | 'totalAssets' | 'equityAndLiabilities';
 type SortDirection = 'asc' | 'desc';
 
 const DocumentTable: React.FC<DocumentTableProps> = ({ 
   onSelectDocument,
   selectedDocument,
   documents,
-  isLoading = false
+  isLoading = false,
+  onDocumentsCleared
 }) => {
   const { t } = useLocale();
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<SortField>('processedTime');
+  const [sortField, setSortField] = useState<SortField>('companyId');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [error, setError] = useState<string | null>(null);
+  const [isClearing, setIsClearing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -64,21 +69,17 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
         valueA = a.financialData.companyName;
         valueB = b.financialData.companyName;
         break;
-      case 'processedTime':
-        valueA = new Date(a.processedTime).getTime();
-        valueB = new Date(b.processedTime).getTime();
-        break;
-      case 'grossProfit':
-        valueA = a.financialData.grossProfit ?? 0;
-        valueB = b.financialData.grossProfit ?? 0;
-        break;
-      case 'profitAfterTax':
-        valueA = (a.financialData.profitAfterTax ?? a.financialData.annualResult) ?? 0;
-        valueB = (b.financialData.profitAfterTax ?? b.financialData.annualResult) ?? 0;
+      case 'annualResult':
+        valueA = a.financialData.annualResult ?? 0;
+        valueB = b.financialData.annualResult ?? 0;
         break;
       case 'totalAssets':
         valueA = a.financialData.totalAssets ?? 0;
         valueB = b.financialData.totalAssets ?? 0;
+        break;
+      case 'equityAndLiabilities':
+        valueA = a.financialData.equityAndLiabilities || a.financialData.totalLiabilities || 0;
+        valueB = b.financialData.equityAndLiabilities || b.financialData.totalLiabilities || 0;
         break;
       default:
         valueA = 0;
@@ -104,6 +105,70 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
+  const handleClearAll = async () => {
+    try {
+      setIsClearing(true);
+      const response = await fetch(`${getConfig().apiUrl}/api/pdf/clear`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      if (!response.ok) throw new Error('Failed to clear documents');
+      
+      // Clear local state
+      if (onDocumentsCleared) {
+        onDocumentsCleared();
+      }
+      setSearchTerm('');
+      setCurrentPage(1);
+      onSelectDocument(null);
+      toast.success(t('toast.documentsCleared'));
+    } catch (err) {
+      toast.error(t('toast.clearFailed'));
+      setError(t('toast.clearFailed'));
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
+  const handleExportJSON = async () => {
+    try {
+      setIsExporting(true);
+      const response = await fetch(`${getConfig().apiUrl}/api/pdf/processed`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch export data');
+      }
+
+      const data = await response.json();
+      const exportData = data.map(d => ({
+        ...d.financialData,
+        equityAndLiabilities: d.financialData.equityAndLiabilities || d.financialData.totalLiabilities
+      }));
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `financial-data-${format(new Date(), 'yyyy-MM-dd')}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success(t('toast.exportSuccess'));
+    } catch (err) {
+      toast.error(t('toast.exportFailed'));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col space-y-4">
@@ -123,9 +188,9 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
                 <TableHead>{t('table.columns.registrationNumber')}</TableHead>
                 <TableHead>{t('table.columns.company')}</TableHead>
                 <TableHead>{t('table.columns.uploaded')}</TableHead>
-                <TableHead>{t('table.columns.grossProfit')}</TableHead>
-                <TableHead>{t('table.columns.profitAfterTax')}</TableHead>
+                <TableHead>{t('table.columns.annualResult')}</TableHead>
                 <TableHead>{t('table.columns.totalAssets')}</TableHead>
+                <TableHead>{t('table.columns.equityAndLiabilities')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -179,8 +244,8 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1">
+      <div className="flex items-center justify-between gap-2">
+        <div className="relative w-72">
           <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             type="text"
@@ -190,6 +255,31 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
             className="pl-9"
           />
         </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="default"
+            onClick={handleExportJSON}
+            disabled={isExporting || documents.length === 0}
+          >
+            {isExporting ? (
+              t('common.exporting')
+            ) : (
+              <>
+                <Download className="h-4 w-4 mr-2" />
+                {t('common.exportJSON')}
+              </>
+            )}
+          </Button>
+          <Button
+            variant="destructive"
+            size="default"
+            onClick={handleClearAll}
+            disabled={isClearing || documents.length === 0}
+          >
+            {isClearing ? t('common.clearing') : t('common.clearAll')}
+          </Button>
+        </div>
       </div>
       
       <div className="rounded-md border shadow-sm overflow-hidden">
@@ -198,96 +288,11 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
             <TableHeader className="bg-muted/50">
               <TableRow>
                 <TableHead className="w-10"></TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort('companyId')}
-                    className="hover:bg-transparent p-0 h-auto font-medium"
-                  >
-                    {t('table.columns.registrationNumber')}
-                    {sortField === 'companyId' && (
-                      sortDirection === 'asc' ? 
-                        <SortAsc className="ml-1 h-3 w-3 inline" /> : 
-                        <SortDesc className="ml-1 h-3 w-3 inline" />
-                    )}
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort('companyName')}
-                    className="hover:bg-transparent p-0 h-auto font-medium"
-                  >
-                    {t('table.columns.company')}
-                    {sortField === 'companyName' && (
-                      sortDirection === 'asc' ? 
-                        <SortAsc className="ml-1 h-3 w-3 inline" /> : 
-                        <SortDesc className="ml-1 h-3 w-3 inline" />
-                    )}
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort('processedTime')}
-                    className="hover:bg-transparent p-0 h-auto font-medium"
-                  >
-                    {t('table.columns.uploaded')}
-                    {sortField === 'processedTime' && (
-                      sortDirection === 'asc' ? 
-                        <SortAsc className="ml-1 h-3 w-3 inline" /> : 
-                        <SortDesc className="ml-1 h-3 w-3 inline" />
-                    )}
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort('grossProfit')}
-                    className="hover:bg-transparent p-0 h-auto font-medium text-right"
-                  >
-                    {t('table.columns.grossProfit')}
-                    {sortField === 'grossProfit' && (
-                      sortDirection === 'asc' ? 
-                        <SortAsc className="ml-1 h-3 w-3 inline" /> : 
-                        <SortDesc className="ml-1 h-3 w-3 inline" />
-                    )}
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort('profitAfterTax')}
-                    className="hover:bg-transparent p-0 h-auto font-medium text-right"
-                  >
-                    {t('table.columns.profitAfterTax')}
-                    {sortField === 'profitAfterTax' && (
-                      sortDirection === 'asc' ? 
-                        <SortAsc className="ml-1 h-3 w-3 inline" /> : 
-                        <SortDesc className="ml-1 h-3 w-3 inline" />
-                    )}
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort('totalAssets')}
-                    className="hover:bg-transparent p-0 h-auto font-medium text-right"
-                  >
-                    {t('table.columns.totalAssets')}
-                    {sortField === 'totalAssets' && (
-                      sortDirection === 'asc' ? 
-                        <SortAsc className="ml-1 h-3 w-3 inline" /> : 
-                        <SortDesc className="ml-1 h-3 w-3 inline" />
-                    )}
-                  </Button>
-                </TableHead>
+                <TableHead className="text-center">{t('table.columns.registrationNumber')}</TableHead>
+                <TableHead className="text-center">{t('table.columns.company')}</TableHead>
+                <TableHead className="text-center">{t('table.columns.annualResult')}</TableHead>
+                <TableHead className="text-center">{t('table.columns.totalAssets')}</TableHead>
+                <TableHead className="text-center">{t('table.columns.equityAndLiabilities')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -311,14 +316,13 @@ const DocumentTable: React.FC<DocumentTableProps> = ({
                         <Check className="h-4 w-4 text-primary" />
                       )}
                     </TableCell>
-                    <TableCell>{doc.financialData.companyId}</TableCell>
-                    <TableCell>{doc.financialData.companyName}</TableCell>
-                    <TableCell>{format(new Date(doc.processedTime), 'dd/MM/yyyy HH:mm')}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(doc.financialData.grossProfit)}</TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(doc.financialData.profitAfterTax ?? doc.financialData.annualResult)}
+                    <TableCell className="text-center">{doc.financialData.companyId}</TableCell>
+                    <TableCell className="text-center">{doc.financialData.companyName}</TableCell>
+                    <TableCell className="text-center">{formatCurrency(doc.financialData.annualResult)}</TableCell>
+                    <TableCell className="text-center">{formatCurrency(doc.financialData.totalAssets)}</TableCell>
+                    <TableCell className="text-center">
+                      {formatCurrency(doc.financialData.equityAndLiabilities || doc.financialData.totalLiabilities)}
                     </TableCell>
-                    <TableCell className="text-right">{formatCurrency(doc.financialData.totalAssets)}</TableCell>
                   </TableRow>
                 ))
               )}

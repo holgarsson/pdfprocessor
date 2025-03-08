@@ -165,7 +165,11 @@ const DocumentDetails: React.FC<DocumentDetailsProps> = ({ document }) => {
             <FinancialRow label={t('document.balance.shortTermLiabilities')} value={financialData.shortTermLiabilities} indentLevel={1} />
             <Separator className="my-2" />
             <FinancialRow label={t('document.balance.totalLiabilities')} value={financialData.totalLiabilities} isTotal />
-            <FinancialRow label={t('document.balance.equityAndLiabilities')} value={financialData.equityAndLiabilities} isTotal />
+            <FinancialRow 
+              label={t('document.balance.equityAndLiabilities')} 
+              value={financialData.equityAndLiabilities || financialData.totalLiabilities} 
+              isTotal 
+            />
           </TabsContent>
           
           <TabsContent value="metrics" className="flex-1 overflow-y-auto pr-1 mt-0">

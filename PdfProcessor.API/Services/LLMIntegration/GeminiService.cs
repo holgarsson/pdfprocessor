@@ -40,8 +40,8 @@ public class GeminiService : IGeminiService
         {
             Temperature = 0.0f,
             SystemInstructions = systemInstructions,
-            TopP = 0.7f,
-            TopK = 20
+            TopP = 0.9f,
+            TopK = 40
         };
 
         _logger.LogInformation("Creating new GeminiChat instance for request");
@@ -51,7 +51,7 @@ public class GeminiService : IGeminiService
         {
             _logger.LogInformation("Sending request to Gemini API");
             Microsoft.Extensions.AI.ChatMessage response = await geminiChat.SendMessage(
-                "Please analyze this PDF and extract the financial data in JSON format.", 
+                "Please analyze this PDF and extract the financial data in JSON format. EXCLUDE financial data columns with header 'Konsern'.", 
                 [pdfBytes], 
                 settings: settings);
             

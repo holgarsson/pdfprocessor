@@ -7,6 +7,11 @@
     "more": "og {count} afturat",
     "percent": "{value}%",
     "search": "Leita",
+    "clear": "Reinsa",
+    "clearAll": "Strika Alt",
+    "clearing": "Strikar...",
+    "exportJSON": "Útflyt JSON",
+    "exporting": "Útflytur...",
     "noResults": "Ongi skjøl funnin",
     "loggedInAs": "Innritaður sum",
     "logout": "Rita út"
@@ -17,6 +22,8 @@
     "invalidResponse": "Ógildugt svar frá servara",
     "failedToLoad": "Fekk ikki heintað skjøl",
     "failedToLoadPdf": "Fekk ikki latið upp PDF fílu",
+    "clearFailed": "Fekk ikki strikað skjøl",
+    "documentsCleared": "Øll skjøl eru strikað",
     "backToList": "Aftur til skjalayvirlit"
   },
   "header": {
@@ -55,10 +62,9 @@
     "columns": {
       "registrationNumber": "Skrásetingar Nr.",
       "company": "Navn",
-      "uploaded": "Sent inn",
-      "grossProfit": "Bruttoúrslit",
-      "profitAfterTax": "Úrslit eftir skatt",
-      "totalAssets": "Ogn í alt"
+      "annualResult": "Ársúrslit",
+      "totalAssets": "Ogn íalt",
+      "equityAndLiabilities": "Skuld íalt"
     },
     "pagination": {
       "page": "Síða {current} av {total}",

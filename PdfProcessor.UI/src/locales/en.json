@@ -7,6 +7,10 @@
     "more": "and {count} more",
     "percent": "{value}%",
     "search": "Search",
+    "clearAll": "Clear All",
+    "clearing": "Clearing...",
+    "exportJSON": "Export JSON",
+    "exporting": "Exporting...",
     "noResults": "No documents found",
     "loggedInAs": "Logged in as",
     "logout": "Logout"
@@ -17,6 +21,8 @@
     "invalidResponse": "Invalid response format from server",
     "failedToLoad": "Failed to load documents",
     "failedToLoadPdf": "Failed to load PDF file",
+    "clearFailed": "Failed to clear documents",
+    "documentsCleared": "All documents have been cleared",
     "backToList": "Back to document list"
   },
   "header": {
@@ -55,10 +61,9 @@
     "columns": {
       "registrationNumber": "Registration No.",
       "company": "Company",
-      "uploaded": "Uploaded",
-      "grossProfit": "Gross Profit",
-      "profitAfterTax": "Profit After Tax",
-      "totalAssets": "Total Assets"
+      "annualResult": "Annual Result",
+      "totalAssets": "Total Assets",
+      "equityAndLiabilities": "Equity & Liabilities"
     },
     "pagination": {
       "page": "Page {current} of {total}",
