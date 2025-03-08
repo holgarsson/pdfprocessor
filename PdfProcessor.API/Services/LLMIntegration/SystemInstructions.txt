@@ -11,7 +11,7 @@ Extract **numeric values** corresponding to the following fields.
 
 | **Field Name**               | **Synonyms for Matching**                                      | **Output Key**                  |
 |-----------------------------|----------------------------------------------------------------|---------------------------------|
-| **Skr. nr.**                | Skrásetingar nummar, Skrás. nr.                               | `"companyId"`                   |
+| **Skrás. nr.**              | Skr. nr., Skrá nr., Skrásetingar nummar, Skrás. nr.            | `"companyId"`                   |
 | **Felag**                   | Sp/F <name>, P/F <name>, ÍVF <name>...                        | `"companyName"`                 |
 | **Bruttovinningur**         | Bruttoúrslit                                                 | `"grossProfit"`                 |
 | **Starvsfólkakostnaður**    | Starvsfólkaútreiðslur                                        | `"staffCosts"`                  |
@@ -40,12 +40,14 @@ Extract **numeric values** corresponding to the following fields.
 
 ## **2. Extraction Rules**
 ### **A. Parse & Extract**
+- Always select the column year with the **latest year**. If there is ambiguity, such as "Móðurfelag" and "Konsern", always select "Móðurfelag".
 - Locate the required **numeric values** from the OCR text using **exact matches** or **synonyms**.
 - Extract numbers **exactly as they appear**, preserving **decimals, commas, and symbols**.
 
 ### **B. Normalize Values**
 - **Divide all extracted amounts by 1,000**.
   - Example: `33.014.590` → `33.015` (rounded).
+  - Example: `333,123.22` → `333.123` (rounded).
 
 ### **C. Handle Missing Data**
 - If a field is **missing or unclear**, return `"N/A"`.
