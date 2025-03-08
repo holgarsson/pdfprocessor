@@ -1,5 +1,5 @@
 ﻿## **Goal**
-From raw OCR text (PDF financial reports), extract specific **financial information** and return the data as a structured JSON object.
+From raw OCR text (PDF financial reports), extract specific **financial information** and return the data as a structured JSON object — **without** any numerical conversion, but with an extra boolean indicating whether the provided values are already in thousands.
 
 ---
 
@@ -56,11 +56,10 @@ Identify and extract **numeric values** for the fields listed below. You may rel
 - **`totalAssets`** must always match **`equityAndLiabilities`** OR **`totalLiabilities`**.  
   - This implies: `totalAssets` == `equityAndLiabilities` or `totalAssets` == `equity + totalLiabilities + provisions` (depending on how the OCR text is structured).
 
-### **C. Thousands Normalization**
-- If the amounts are explicitly stated **in thousands** (e.g., "in 1.000," "tkr," "t.kr."), **do not** convert.  
-- Otherwise, **divide every extracted value by 1000**, then round to the nearest unit.  
-  - **Example**: `33.014.590` → `33.015` (after rounding).  
-  - **Example**: `333,123.22` → `333.123` (after rounding).
+### **C. Thousands Indicator**
+- By default, "**alreadyInThousands**" = **false**. 
+- If the text explicitly states the amounts are in thousands (e.g., “in 1.000,” “tkr,” “t.kr.”), set "**alreadyInThousands**" = **true**.
+- **No numeric conversion** is performed. Always return extracted values **as-is**, regardless of whether they are in thousands or not.
 
 ### **D. Missing or Unclear Data**
 - If a required field is completely missing or cannot be determined from context, return an **empty string** (`""`) for that field.
@@ -69,15 +68,15 @@ Identify and extract **numeric values** for the fields listed below. You may rel
 - Disregard non-financial items, headings, metadata, or any other text not related to the fields defined above.
 
 ### **F. Output Valid JSON Only**
-- Return strictly valid JSON.  
-- **Do not** include synonyms or extraneous information in the output—**only** the defined JSON keys.
+- Return strictly valid JSON.
+- **Do not** include synonyms or extra properties — **only** the defined JSON keys plus the `"alreadyInThousands"` boolean.
 
 ---
 
 ## **3. JSON Output Format**
 
-Your final output should be a single JSON object containing **all** the fields below. Replace `<value>` with the extracted data or `""` if not found.
-
+Your final output should be a **single JSON object** containing **all** the fields below, plus the `"alreadyInThousands"` boolean.
+Replace <value> with the extracted data or "" if not found. **Numeric fields** remain numeric where possible, else as the original string if the OCR extracts symbols/decimals.
 ```json
 {
   "companyId": "<company_id>",
@@ -106,16 +105,23 @@ Your final output should be a single JSON object containing **all** the fields b
   "longTermLiabilities": <longTermLiabilities>,
   "shortTermLiabilities": <shortTermLiabilities>,
   "totalLiabilities": <totalLiabilities>,
-  "equityAndLiabilities": <equityAndLiabilities>
+  "equityAndLiabilities": <equityAndLiabilities>,
+
+  "alreadyInThousands": false
 }
 ```
+- Initialize `alreadyInThousands` to `false`.
+- If you detect a textual marker (e.g., “t.kr.”, “tkr”, “in 1.000”) indicating the amounts are stated in thousands, set `"alreadyInThousands": true`.
 
-**Note: <grossProfit>, <staffCosts>, etc. should be numeric when possible. If no value is found, output "" (an empty string).**
+No other properties or synonyms should be included in the final output.
+
+--
 
 ### Quick Reference Checklist
 1. **Match** fields via **exact** or **synonym** labels.
 2. **Extract** numeric values exactly as found, and take the **rightmost** column if multiple appear for the same year.
-3. Apply **thousands normalization** unless the text explicitly states amounts are already in thousands.
-4. Ensure `totalAssets` aligns with `equityAndLiabilities` or `totalLiabilities`.
-5. Fill in missing fields with "".
-6. Output a **valid JSON** object with **no extra** properties or synonyms.
+3. **Do not** perform any division or rounding; always return the extracted values as-is.
+4. Set `"alreadyInThousands"` to `true` if the text states amounts are in thousands; otherwise, `false`.
+5. Ensure `totalAssets` aligns with `equityAndLiabilities` or `totalLiabilities`.
+6. Fill in missing fields with an empty string "".
+7. Output a **valid JSON** object with **no extra** properties.
