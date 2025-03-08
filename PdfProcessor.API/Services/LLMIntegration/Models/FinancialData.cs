@@ -1,8 +1,36 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Reflection;
+using System.Linq;
 
 namespace PdfProcessor.API.Services.LLMIntegration.Models;
+
+public record FinancialDataResponse(
+    decimal? CompanyId,
+    string? CompanyName,
+    decimal? GrossProfit,
+    decimal? StaffCosts,
+    decimal? OtherOperatingExpenses,
+    decimal? Depreciation,
+    decimal? ProfitBeforeInterest,
+    decimal? FinancialIncome,
+    decimal? FinancialExpenses,
+    decimal? ProfitBeforeExtraordinaryItems,
+    decimal? ExtraordinaryItems,
+    decimal? ProfitBeforeTax,
+    decimal? Tax,
+    decimal? ProfitAfterTax,
+    decimal? AnnualResult,
+    decimal? FixedAssets,
+    decimal? CurrentAssets,
+    decimal? TotalAssets,
+    decimal? Equity,
+    decimal? Provisions,
+    decimal? LongTermLiabilities,
+    decimal? ShortTermLiabilities,
+    decimal? TotalLiabilities,
+    decimal? EquityAndLiabilities
+);
 
 public class FinancialData
 {
@@ -94,6 +122,31 @@ public class FinancialData
 
     #endregion
 
+    [Display(Name = "Already in Thousands", GroupName = "Financial Data")]
+    public bool AlreadyInThousands { get; set; } = false;
+
+    /// <summary>
+    /// Normalizes financial data by dividing all non-null and greater than 0 decimal values by 1000 if not already in thousands
+    /// </summary>
+    public void NormalizeFinancialData()
+    {
+        if (AlreadyInThousands) return;
+
+        var properties = GetType().GetProperties()
+            .Where(p => p.PropertyType == typeof(decimal?));
+
+        foreach (var property in properties)
+        {
+            var value = (decimal?)property.GetValue(this);
+            if (value.HasValue && value.Value > 0)
+            {
+                property.SetValue(this, value.Value / 1000);
+            }
+        }
+
+        AlreadyInThousands = true;
+    }
+
     /// <summary>
     /// Returns a JSON representation of the financial data
     /// </summary>
@@ -120,6 +173,12 @@ public class FinancialData
 
             try
             {
+                if (property.Name == "alreadyInThousands")
+                {
+                    data.AlreadyInThousands = property.Value.GetBoolean();
+                    continue;
+                }
+
                 if (property.Value.ValueKind == JsonValueKind.Number)
                 {
                     decimal decimalValue = property.Value.GetDecimal();
@@ -184,4 +243,34 @@ public class FinancialData
         DisplayAttribute? displayAttribute = property.GetCustomAttribute<DisplayAttribute>();
         return displayAttribute?.GroupName ?? string.Empty;
     }
+
+    /// <summary>
+    /// Converts the FinancialData to a FinancialDataResponse
+    /// </summary>
+    public FinancialDataResponse ToResponse() => new(
+        CompanyId,
+        CompanyName,
+        GrossProfit,
+        StaffCosts,
+        OtherOperatingExpenses,
+        Depreciation,
+        ProfitBeforeInterest,
+        FinancialIncome,
+        FinancialExpenses,
+        ProfitBeforeExtraordinaryItems,
+        ExtraordinaryItems,
+        ProfitBeforeTax,
+        Tax,
+        ProfitAfterTax,
+        AnnualResult,
+        FixedAssets,
+        CurrentAssets,
+        TotalAssets,
+        Equity,
+        Provisions,
+        LongTermLiabilities,
+        ShortTermLiabilities,
+        TotalLiabilities,
+        EquityAndLiabilities
+    );
 }

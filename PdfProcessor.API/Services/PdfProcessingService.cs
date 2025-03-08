@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace PdfProcessor.API.Services;
 
-public record ProcessedFile(string Id, string FileName,string FilePath, DateTime ProcessedTime = default, FinancialData? FinancialData = null);
+public record ProcessedFile(string Id, string FileName, string FilePath, DateTime ProcessedTime = default, FinancialDataResponse? FinancialData = null);
 
 public record ProcessingResult
 {
@@ -146,13 +146,17 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
             memoryStream = null;
 
             FinancialData financialData = await _geminiService.GetFinancialData(pdfBytes);
+            if (!financialData.AlreadyInThousands)
+            {
+                financialData.NormalizeFinancialData();
+            }
 
             _logger.LogInformation("Processed file: {FileName}", file.FileName);
             _logger.LogInformation("Financial data: {FinancialData}", financialData);
 
             _processedFiles.TryAdd(
                 fileId, 
-                new ProcessedFile(fileId, file.FileName, tempPath, _timeProvider.GetUtcNow().UtcDateTime, financialData));
+                new ProcessedFile(fileId, file.FileName, tempPath, _timeProvider.GetUtcNow().UtcDateTime, financialData.ToResponse()));
         }
         catch (Exception ex)
         {
