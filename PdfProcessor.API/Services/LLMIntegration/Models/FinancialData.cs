@@ -1,12 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Reflection;
-using System.Linq;
 
 namespace PdfProcessor.API.Services.LLMIntegration.Models;
 
 public record FinancialDataResponse(
-    decimal? CompanyId,
+    int? CompanyId,
     string? CompanyName,
     decimal? GrossProfit,
     decimal? StaffCosts,
@@ -37,7 +36,7 @@ public class FinancialData
 	#region Company Info
 
     [Display(Name = "Company ID", GroupName = "Company Info")]
-    public decimal? CompanyId { get; set; }
+    public int? CompanyId { get; set; }
 
     [Display(Name = "Company Name", GroupName = "Company Info")]
     public string? CompanyName { get; set; }
@@ -173,9 +172,9 @@ public class FinancialData
 
             try
             {
-                if (property.Name == "alreadyInThousands")
+                if (property.Name == "alreadyInThousands" && property.Value.ValueKind == JsonValueKind.True)
                 {
-                    data.AlreadyInThousands = property.Value.GetBoolean();
+                    data.AlreadyInThousands = true;
                     continue;
                 }
 
@@ -194,15 +193,15 @@ public class FinancialData
                         continue;
                     }
 
-                    if (property.Name == nameof(CompanyId))
+                    if (property.Name == "companyId")
                     {
                         // Remove all non-numeric characters
                         string? companyNumberString = new(value?.Where(char.IsDigit).ToArray());
                         if (!string.IsNullOrEmpty(companyNumberString) && int.TryParse(companyNumberString.Trim(), out int companyNumber))
                         {
                             propertyInfo.SetValue(data, companyNumber);
-                            continue;
                         }
+                        continue;
                     }
 
                     if (decimal.TryParse(value?.Replace(".", ""), out decimal decimalValue))

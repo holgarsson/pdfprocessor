@@ -21,6 +21,42 @@ const DropZone: React.FC<DropZoneProps> = ({
 }) => {
   const { t } = useLocale();
   
+  // Simulates progress with a natural curve
+  const simulateProgress = (
+    processingFiles: ProcessingFile[],
+    index: number,
+    onUpdate: (files: ProcessingFile[]) => void
+  ) => {
+    let progress = 0;
+    const interval = setInterval(() => {
+      // Different phases of progress
+      let increment;
+      if (progress < 30) {
+        // Initial phase - moderately slow
+        increment = 0.6;
+      } else if (progress < 60) {
+        // Middle phase - slightly faster
+        increment = Math.max(0.8, (60 - progress) * 0.03);
+      } else if (progress < 85) {
+        // Later phase - moderate
+        increment = Math.max(0.4, (85 - progress) * 0.015);
+      } else {
+        // Final phase - slower
+        increment = 0.2;
+      }
+      
+      progress = Math.min(progress + increment, 98);
+      processingFiles[index].progress = Math.round(progress);
+      onUpdate([...processingFiles]);
+      
+      if (progress >= 98) {
+        clearInterval(interval);
+      }
+    }, 50);
+    
+    return interval;
+  };
+  
   const processFile = async (file: File, processingFiles: ProcessingFile[], index: number, totalFiles: number) => {
     try {
       // Start processing
@@ -28,17 +64,32 @@ const DropZone: React.FC<DropZoneProps> = ({
       processingFiles[index].progress = 0;
       onFileUpload([...processingFiles], index);
 
+      // Start progress simulation
+      const progressInterval = simulateProgress(processingFiles, index, (files) => {
+        onFileUpload(files, index);
+      });
+
+      // Create a minimum processing time promise
+      const minProcessingTime = new Promise(resolve => setTimeout(resolve, 2500));
+
       // Upload and process the file
       const formData = new FormData();
       formData.append('files', file);
 
-      const response = await fetch(`${getConfig().apiUrl}/api/pdf/process`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
-        body: formData
-      });
+      const [response] = await Promise.all([
+        fetch(`${getConfig().apiUrl}/api/pdf/process`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: formData
+        }),
+        minProcessingTime // Ensure minimum processing time
+      ]);
+
+      // Add extra delay before clearing simulation
+      await new Promise(resolve => setTimeout(resolve, 300));
+      clearInterval(progressInterval);
 
       if (!response.ok) {
         throw new Error(`Upload failed with status ${response.status}`);
@@ -49,7 +100,8 @@ const DropZone: React.FC<DropZoneProps> = ({
         throw new Error('Invalid response format from server');
       }
 
-      // Mark as complete
+      // Mark as complete with a small delay
+      await new Promise(resolve => setTimeout(resolve, 200));
       processingFiles[index].status = 'completed';
       processingFiles[index].progress = 100;
       const newCompletedCount = index + 1;

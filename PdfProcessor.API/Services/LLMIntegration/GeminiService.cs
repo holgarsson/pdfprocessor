@@ -1,6 +1,5 @@
 ﻿using PdfProcessor.API.Services.LLMIntegration.Models;
 using GoogleGeminiSDK;
-using Microsoft.Extensions.Logging;
 
 namespace PdfProcessor.API.Services.LLMIntegration;
 
@@ -13,7 +12,7 @@ public interface IGeminiService
 public class GeminiService : IGeminiService
 {
     private const string ApiKey = "AIzaSyAawBOHVjr5Eo-KF__fXwuiJThgEvmOZcs";
-    private const string ModelId = "gemini-2.0-flash";
+    private const string ModelId = "gemini-2.0-flash-lite";
     private readonly List<FinancialData> _processedFiles = [];
     private readonly ILogger<GeminiService> _logger;
 
@@ -41,8 +40,9 @@ public class GeminiService : IGeminiService
         {
             Temperature = 0.0f,
             SystemInstructions = systemInstructions,
-            TopP = 0.9f,
-            TopK = 40
+            TopP = 0.95f,
+            TopK = 40,
+            MaxOutputTokenCount = 8192
         };
 
         _logger.LogInformation("Creating new GeminiChat instance for request");
@@ -57,7 +57,6 @@ public class GeminiService : IGeminiService
                 settings: settings);
             
             _logger.LogInformation("Received response from Gemini API");
-            Console.WriteLine(response.Text);
 
             if (string.IsNullOrWhiteSpace(response?.Text)) 
             {

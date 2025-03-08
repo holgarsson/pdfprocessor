@@ -14,69 +14,75 @@ Identify and extract **numeric values** for the fields listed below. You may rel
 
 > **Important**: Use synonyms **only** for matching. Do **not** include them in the output.
 
-
-| **Field Name**               | **Synonyms for Matching**                                      | **Output Key**                  |
-|-----------------------------|----------------------------------------------------------------|---------------------------------|
-| **Skrás. nr.**              | Skr. nr., Skrá nr., Skrásetingar nummar, Skrás. nr.            | `"companyId"`                   |
-| **Felag**                   | Sp/F <name>, P/F <name>, ÍVF <name>...                        | `"companyName"`                 |
-| **Bruttovinningur**         | Bruttoúrslit                                                 | `"grossProfit"`                 |
-| **Starvsfólkakostnaður**    | Starvsfólkaútreiðslur                                        | `"staffCosts"`                  |
-| **Annar rakstarkostnaður**  | Aðrir kostnaðir                                             | `"otherOperatingExpenses"`      |
-| **Avskrivingar**            | Av- og niðurskrivingar, Av- og niðurskrivingar av materiellari og immateriellari støðisogn | `"depreciation"` |
-| **Úrslit áðrenn rentur**    | Rakstrarúrslit, Úrslit áðrenn fíggjarpostar                  | `"profitBeforeInterest"`        |
-| **Fíggjarligar inntøkur**   | Rentuinntøkur, Kapitalpartar, Aðrar fíggjarligar inntøkur     | `"financialIncome"`             |
-| **Fíggjarligar útreiðslur** | Rentukostnaðir, Fíggjarligur kostnaður, Fíggjarkostnaður     | `"financialExpenses"`           |
-| **Úrslit áðrenn óvantaðar postar** | —                                                | `"profitBeforeExtraordinaryItems"` |
-| **Óvanligir postar**        | —                                                            | `"extraordinaryItems"`          |
-| **Úrslit áðrenn skatt**     | —                                                            | `"profitBeforeTax"`             |
-| **Skattur**                 | Partafelagsskattur, Skattur av ársúrslitinum                 | `"tax"`                         |
-| **Úrslit eftir skatt**      | —                                                            | `"profitAfterTax"`              |
-| **Ársins úrslit**           | Ársúrslit                                                   | `"annualResult"`                |
-| **Støðisogn**               | Materiell støðisogn                                         | `"fixedAssets"`                 |
-| **Ogn í umferð**           | Umferðarogn, Ogn í umferð til samans                         | `"currentAssets"`               |
-| **Ogn íalt**                | Ogn tilsamans, Ogn samantalt                                 | `"totalAssets"`                 |
-| **Eginpeningur**            | Eginogn, Eginogn tilsamans                                  | `"equity"`                      |
-| **Avseting**                | Avsetingar tilsamans, Avsettar skyldur tilsamans            | `"provisions"`                  |
-| **Langfreiðstaskuld**       | Langfreistað skuld tilsamans                                | `"longTermLiabilities"`         |
-| **Stuttfreistaskuld**       | Stuttfreistað skuld tilsamans                               | `"shortTermLiabilities"`        |
-| **Skuld íalt**              | Skuld til samans, Skyldur tilsamans                         | `"totalLiabilities"`            |
-| **Eginpeningur, avsetingar og skuld** | Skyldur tilsamans, Skyldur samantalt            | `"equityAndLiabilities"`        |
+| **Field Name**               | **Synonyms for Matching**                                                                            | **Output Key**                    |
+|------------------------------|--------------------------------------------------------------------------------------------------------|-----------------------------------|
+| **Skrás. nr.**               | Skr. nr., Skrá nr., Skrásetingar nummar, Skrás. nr.                                                   | `"companyId"`                     |
+| **Felag**                    | Sp/F <name>, P/F <name>, ÍVF <name>...                                                               | `"companyName"`                   |
+| **Bruttovinningur**          | Bruttoúrslit                                                                                          | `"grossProfit"`                   |
+| **Starvsfólkakostnaður**     | Starvsfólkaútreiðslur                                                                                 | `"staffCosts"`                    |
+| **Annar rakstarkostnaður**   | Aðrir kostnaðir                                                                                       | `"otherOperatingExpenses"`        |
+| **Avskrivingar**             | Av- og niðurskrivingar, Av- og niðurskrivingar av materiellari og immateriellari støðisogn           | `"depreciation"`                  |
+| **Úrslit áðrenn rentur**     | Rakstrarúrslit, Úrslit áðrenn fíggjarpostar                                                           | `"profitBeforeInterest"`          |
+| **Fíggjarligar inntøkur**    | Rentuinntøkur, Kapitalpartar, Aðrar fíggjarligar inntøkur                                            | `"financialIncome"`               |
+| **Fíggjarligar útreiðslur**  | Rentukostnaðir, Fíggjarligur kostnaður, Fíggjarkostnaður                                            | `"financialExpenses"`             |
+| **Úrslit áðrenn óvantaðar postar** | —                                                                                               | `"profitBeforeExtraordinaryItems"`|
+| **Óvanligir postar**         | —                                                                                                     | `"extraordinaryItems"`            |
+| **Úrslit áðrenn skatt**      | —                                                                                                     | `"profitBeforeTax"`               |
+| **Skattur**                  | Partafelagsskattur, Skattur av ársúrslitinum                                                         | `"tax"`                           |
+| **Úrslit eftir skatt**       | —                                                                                                     | `"profitAfterTax"`                |
+| **Ársins úrslit**            | Ársúrslit                                                                                            | `"annualResult"`                  |
+| **Støðisogn**                | Materiell støðisogn                                                                                   | `"fixedAssets"`                   |
+| **Ogn í umferð**             | Umferðarogn, Ogn í umferð til samans                                                                  | `"currentAssets"`                 |
+| **Ogn íalt**                 | Ogn tilsamans, Ogn samantalt                                                                          | `"totalAssets"`                   |
+| **Eginpeningur**             | Eginogn, Eginogn tilsamans                                                                           | `"equity"`                        |
+| **Avseting**                 | Avsetingar tilsamans, Avsettar skyldur tilsamans                                                     | `"provisions"`                    |
+| **Langfreiðstaskuld**        | Langfreistað skuld tilsamans                                                                         | `"longTermLiabilities"`           |
+| **Stuttfreistaskuld**        | Stuttfreistað skuld tilsamans                                                                        | `"shortTermLiabilities"`          |
+| **Skuld íalt**               | Skuld til samans, Skyldur tilsamans                                                                  | `"totalLiabilities"`              |
+| **Eginpeningur, avsetingar og skuld** | Skyldur tilsamans, Skyldur samantalt                                                         | `"equityAndLiabilities"`          |
 
 ---
 
 ## **2. Extraction Rules**
 
-
 ### **A. Parse & Extract**
 1. In the OCR text, locate lines or labels matching **any** of the above **Field Names** or their **Synonyms**.  
 2. For each matching label, extract the corresponding **numeric value**—preserving decimals, commas, and symbols exactly as seen.  
-3. If the same field appears in multiple columns for the **same year**, use the **rightmost (latest) column** value.
+3. If the same field appears in multiple columns **for the same year**, use the **rightmost (latest) column** value.  
+4. If multiple **year columns** exist, and you only need the latest year’s data:
+   - Identify the **highest (latest) year** label (e.g., “2024” vs. “2023”) and **extract from that column**.
+   - Ignore older-year columns unless explicitly required.
 
 ### **B. Consistency Requirement for `totalAssets`**
 - **`totalAssets`** must always match **`equityAndLiabilities`** OR **`totalLiabilities`**.  
-  - This implies: `totalAssets` == `equityAndLiabilities` or `totalAssets` == `equity + totalLiabilities + provisions` (depending on how the OCR text is structured).
+  - This implies:  
+    - `totalAssets == equityAndLiabilities`, or  
+    - `totalAssets == equity + totalLiabilities + provisions` (depending on how the OCR text is structured).
 
 ### **C. Thousands Indicator**
-- By default, "**alreadyInThousands**" = **false**. 
-- If the text explicitly states the amounts are in thousands (e.g., “in 1.000,” “tkr,” “t.kr.”), set "**alreadyInThousands**" = **true**.
+- By default, **`alreadyInThousands`** = **false**.
+- **Only set** `alreadyInThousands = true` if you find **explicit textual markers** specifically for the **latest-year column** that you’re extracting. Examples of such markers:
+  - "tkr", “tkr.”, “t.kr.”, “in thousands”, “tal í túsindum”, “DKK'000”, or a heading like “Amounts in thousands.”
+- **Do not** rely on numeric formatting alone—e.g., “3.000” is not enough to set it to `true`. You need a textual label near the same column.
+- **Ignore older-year columns** that might show “tkr”, "tkr.", "t.kr.", "in thousands"; only the column from which you are extracting data should influence `"alreadyInThousands"`.
 - **No numeric conversion** is performed. Always return extracted values **as-is**, regardless of whether they are in thousands or not.
 
 ### **D. Missing or Unclear Data**
-- If a required field is completely missing or cannot be determined from context, return an **empty string** (`""`) for that field.
+- If a required field is completely missing or cannot be determined from the context, return an **empty string** (`""`) for that field.
 
 ### **E. Ignore Irrelevant Data**
-- Disregard non-financial items, headings, metadata, or any other text not related to the fields defined above.
+- Disregard headings, metadata, or any text not related to the fields defined above.
 
 ### **F. Output Valid JSON Only**
 - Return strictly valid JSON.
-- **Do not** include synonyms or extra properties — **only** the defined JSON keys plus the `"alreadyInThousands"` boolean.
+- **Do not** include synonyms or extra properties—**only** the defined JSON keys plus the `"alreadyInThousands"` boolean.
 
 ---
 
 ## **3. JSON Output Format**
 
-Your final output should be a **single JSON object** containing **all** the fields below, plus the `"alreadyInThousands"` boolean.
-Replace <value> with the extracted data or "" if not found. **Numeric fields** remain numeric where possible, else as the original string if the OCR extracts symbols/decimals.
+Your final output should be a **single JSON object** containing **all** the fields below, plus the `"alreadyInThousands"` boolean. Replace `<value>` with the extracted data or `""` if not found. **Numeric fields** remain numeric where possible, otherwise return the string exactly as seen (including decimals, commas, or symbols).
+
 ```json
 {
   "companyId": "<company_id>",
@@ -110,18 +116,19 @@ Replace <value> with the extracted data or "" if not found. **Numeric fields** r
   "alreadyInThousands": false
 }
 ```
-- Initialize `alreadyInThousands` to `false`.
-- If you detect a textual marker (e.g., “t.kr.”, “tkr”, “in 1.000”) indicating the amounts are stated in thousands, set `"alreadyInThousands": true`.
 
-No other properties or synonyms should be included in the final output.
+- **Initialize** `"alreadyInThousands": false`.
+- If you detect a **textual marker** in the **latest-year column** indicating amounts are in thousands, set `"alreadyInThousands": true`.
+- **No** other properties or synonyms should be included.
 
 --
 
-### Quick Reference Checklist
-1. **Match** fields via **exact** or **synonym** labels.
-2. **Extract** numeric values exactly as found, and take the **rightmost** column if multiple appear for the same year.
-3. **Do not** perform any division or rounding; always return the extracted values as-is.
-4. Set `"alreadyInThousands"` to `true` if the text states amounts are in thousands; otherwise, `false`.
-5. Ensure `totalAssets` aligns with `equityAndLiabilities` or `totalLiabilities`.
-6. Fill in missing fields with an empty string "".
-7. Output a **valid JSON** object with **no extra** properties.
+## Quick Reference Checklist
+
+1. **Match** fields using **exact** or **synonym** labels.  
+2. **Identify** the **latest year** column if multiple years are present, and extract **only** from that column.  
+3. **Extract** numeric values exactly as found; do not convert or round.  
+4. Set `"alreadyInThousands" = true` **only** if the **latest-year** column explicitly says "tkr", "tkr.", “t.kr.” or similar.  
+5. Ensure `totalAssets` is consistent with `equityAndLiabilities` or `totalLiabilities`.  
+6. Fill missing fields with `""`.  
+7. Return a **valid JSON** object with **no extra** properties beyond the defined keys.

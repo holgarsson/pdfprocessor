@@ -146,9 +146,11 @@ public class PdfProcessingService : IPdfProcessingService, IAsyncDisposable
             memoryStream = null;
 
             FinancialData financialData = await _geminiService.GetFinancialData(pdfBytes);
-            if (!financialData.AlreadyInThousands)
+            if (financialData.AlreadyInThousands == false)
             {
                 financialData.NormalizeFinancialData();
+            } else {
+                _logger.LogInformation($"Company ID: {financialData.CompanyId}, Name: {financialData.CompanyName} already in thousands...");
             }
 
             _logger.LogInformation("Processed file: {FileName}", file.FileName);
