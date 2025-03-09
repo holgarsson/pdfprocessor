@@ -15,6 +15,7 @@ function App() {
       await configService.init();
       setIsConfigLoaded(true);
     };
+    const test = "";
     initConfig();
   }, []);
 
