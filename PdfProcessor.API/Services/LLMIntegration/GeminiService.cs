@@ -30,7 +30,6 @@ public class GeminiService : IGeminiService
 
         string path = Path.Combine(Directory.GetCurrentDirectory(), "Services", "LLMIntegration", "SystemInstructions.txt");
         string systemInstructions = await File.ReadAllTextAsync(path);
-        Console.WriteLine(systemInstructions);
         if (string.IsNullOrWhiteSpace(systemInstructions))
         {
             throw new Exception("System instructions not found.");
@@ -63,6 +62,8 @@ public class GeminiService : IGeminiService
                 _logger.LogWarning("Empty response received from Gemini API");
                 return new();
             }
+
+            _logger.LogInformation("Response: {Response}", response.Text);
 
             FinancialData financialData = FinancialData.FromJson(response.Text);
             _processedFiles.Add(financialData);
